@@ -52,12 +52,6 @@ DB_USERNAME=...
 DB_PASSWORD=...
 ```
 
-IntelliJ 실행 설정이나 터미널 환경변수에 직접 등록해도 됩니다.
-직접 등록한 값은 `.env`보다 우선합니다.
-
-DB 연결은 `ConnectionManager`가 Apache Commons DBCP2 커넥션 풀을 통해 관리합니다.
-DAO에서는 기존처럼 `ConnectionManager.getConnection()`으로 연결을 가져오면 됩니다.
-
 ## React 연동
 
 개발 중 React는 `http://localhost:3000`에서 실행한다고 가정합니다.
@@ -95,6 +89,8 @@ fetch("http://localhost:8080/api/heartbeat", {
   }
 }
 ```
+
+서버 실행 후 [Swagger UI](http://localhost:8080/swagger-ui/index.html)에서 API 명세와 요청/응답 예시를 확인하고 호출할 수 있습니다.
 
 ## 개발 규칙
 

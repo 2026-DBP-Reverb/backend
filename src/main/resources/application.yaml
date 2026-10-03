@@ -4,3 +4,14 @@ server:
       timeout: 30m
       cookie:
         http-only: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    persist-authorization: true
+    display-request-duration: true
+    default-models-expand-depth: 2
