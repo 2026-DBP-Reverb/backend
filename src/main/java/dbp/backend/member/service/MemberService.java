@@ -140,12 +140,6 @@ public class MemberService {
                     MemberErrorCode.PASSWORD_CONFIRM_MISMATCH
             );
         }
-
-        if (!request.termsAgreed()) {
-            throw new ApiException(
-                    MemberErrorCode.TERMS_AGREEMENT_REQUIRED
-            );
-        }
     }
 
     private String normalizeEmail(String email) {

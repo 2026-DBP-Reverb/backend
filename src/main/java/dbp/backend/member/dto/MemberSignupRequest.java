@@ -22,13 +22,6 @@ public record MemberSignupRequest(
                 example = "password123!",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        String passwordConfirm,
-
-        @Schema(
-                description = "필수 약관 동의 여부",
-                example = "true",
-                requiredMode = Schema.RequiredMode.REQUIRED
-        )
-        boolean termsAgreed
+        String passwordConfirm
 ) {
 }

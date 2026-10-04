@@ -12,10 +12,6 @@ public enum MemberErrorCode implements ErrorCode {
             HttpServletResponse.SC_BAD_REQUEST,
             "비밀번호와 비밀번호 확인이 일치하지 않습니다."
     ),
-    TERMS_AGREEMENT_REQUIRED(
-            HttpServletResponse.SC_BAD_REQUEST,
-            "필수 약관에 동의해야 합니다."
-    ),
     INVALID_LOGIN_CREDENTIALS(
             HttpServletResponse.SC_UNAUTHORIZED,
             "이메일 또는 비밀번호가 올바르지 않습니다."
