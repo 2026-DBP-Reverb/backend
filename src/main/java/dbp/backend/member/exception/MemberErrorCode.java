@@ -8,6 +8,14 @@ public enum MemberErrorCode implements ErrorCode {
             HttpServletResponse.SC_CONFLICT,
             "이미 사용 중인 이메일입니다."
     ),
+    INVALID_EMAIL_FORMAT(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "이메일 형식이 올바르지 않습니다."
+    ),
+    INVALID_PASSWORD_FORMAT(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "비밀번호는 8자 이상의 영문과 숫자 조합이어야 합니다."
+    ),
     PASSWORD_CONFIRM_MISMATCH(
             HttpServletResponse.SC_BAD_REQUEST,
             "비밀번호와 비밀번호 확인이 일치하지 않습니다."

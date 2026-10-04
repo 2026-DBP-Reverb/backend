@@ -123,13 +123,13 @@ public class MemberService {
 
         if (!email.matches(EMAIL_PATTERN)) {
             throw new ApiException(
-                    CommonErrorCode.BAD_REQUEST
+                    MemberErrorCode.INVALID_EMAIL_FORMAT
             );
         }
 
         if (!request.password().matches(PASSWORD_PATTERN)) {
             throw new ApiException(
-                    CommonErrorCode.BAD_REQUEST
+                    MemberErrorCode.INVALID_PASSWORD_FORMAT
             );
         }
 
