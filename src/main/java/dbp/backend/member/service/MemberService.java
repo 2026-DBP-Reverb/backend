@@ -16,10 +16,10 @@ import java.util.Locale;
 @Service
 public class MemberService {
     private static final String EMAIL_PATTERN =
-            "^[A-Za-z0-9._%+-]+@dongduk\\.ac\\.kr$";
+            "^20[0-9]{6}@dongduk\\.ac\\.kr$";
 
     private static final String PASSWORD_PATTERN =
-            "^(?=.*[A-Za-z])(?=.*\\d).{8,}$";
+            "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,}$";
 
     private final MemberDao memberDao;
     private final PasswordEncoder passwordEncoder;

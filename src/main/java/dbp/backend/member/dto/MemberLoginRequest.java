@@ -12,7 +12,7 @@ public record MemberLoginRequest (
 
     @Schema(
             description = "비밀번호",
-            example = "password123!",
+            example = "password123",
             requiredMode = Schema.RequiredMode.REQUIRED
     )
     String password

@@ -12,14 +12,14 @@ public record MemberSignupRequest(
 
         @Schema(
                 description = "비밀번호",
-                example = "password123!",
+                example = "password123",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         String password,
 
         @Schema(
                 description = "비밀번호 확인",
-                example = "password123!",
+                example = "password123",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         String passwordConfirm
