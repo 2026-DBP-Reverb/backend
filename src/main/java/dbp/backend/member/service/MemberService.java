@@ -76,7 +76,7 @@ public class MemberService {
         if (member == null
                 || !passwordEncoder.matches(
                 request.password(),
-                member.passwordHash()
+                member.getPasswordHash()
         )) {
             throw new ApiException(
                     MemberErrorCode.INVALID_LOGIN_CREDENTIALS
@@ -156,9 +156,9 @@ public class MemberService {
 
     private MemberResponse toResponse(Member member) {
         return new MemberResponse(
-                member.memberId(),
-                member.email(),
-                member.createdAt()
+                member.getMemberId(),
+                member.getEmail(),
+                member.getCreatedAt()
         );
     }
 }
