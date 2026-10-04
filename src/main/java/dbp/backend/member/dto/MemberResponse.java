@@ -18,6 +18,24 @@ public record MemberResponse (
         String email,
 
         @Schema(
+                description = "프로필 이미지 URL",
+                example = "https://example.com/profile.png"
+        )
+        String profileImageUrl,
+
+        @Schema(
+                description = "인스타그램 아이디",
+                example = "reverb_music"
+        )
+        String instagramId,
+        
+        @Schema(
+                description = "닉네임",
+                example = "박솜솜"
+        )
+        String nickname,
+
+        @Schema(
                 description = "가입 일시",
                 example = "2026-10-03T19:30:00"
         )

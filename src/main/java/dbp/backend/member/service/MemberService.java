@@ -158,6 +158,9 @@ public class MemberService {
         return new MemberResponse(
                 member.getMemberId(),
                 member.getEmail(),
+                member.getProfileImageUrl(),
+                member.getInstagramId(),
+                member.getNickname(),
                 member.getCreatedAt()
         );
     }

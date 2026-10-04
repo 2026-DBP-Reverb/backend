@@ -68,6 +68,9 @@ public class MemberDao {
                     MEMBER_ID,
                     EMAIL,
                     PASSWORD_HASH,
+                    PROFILE_IMAGE_URL,
+                    INSTAGRAM_ID,
+                    NICKNAME,
                     CREATED_AT
                 FROM MEMBER
                 WHERE EMAIL = ?
@@ -91,6 +94,9 @@ public class MemberDao {
                     MEMBER_ID,
                     EMAIL,
                     PASSWORD_HASH,
+                    PROFILE_IMAGE_URL,
+                    INSTAGRAM_ID,
+                    NICKNAME,
                     CREATED_AT
                 FROM MEMBER
                 WHERE MEMBER_ID = ?
@@ -118,6 +124,9 @@ public class MemberDao {
                 rs.getLong("MEMBER_ID"),
                 rs.getString("EMAIL"),
                 rs.getString("PASSWORD_HASH"),
+                rs.getString("PROFILE_IMAGE_URL"),
+                rs.getString("INSTAGRAM_ID"),
+                rs.getString("NICKNAME"),
                 rs.getTimestamp("CREATED_AT").toLocalDateTime()
         );
     }
