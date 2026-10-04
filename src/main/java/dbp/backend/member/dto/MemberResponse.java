@@ -13,7 +13,7 @@ public record MemberResponse (
 
         @Schema(
                 description = "회원 이메일",
-                example = "student@dongduk.ac.kr"
+                example = "20230774@dongduk.ac.kr"
         )
         String email,
 

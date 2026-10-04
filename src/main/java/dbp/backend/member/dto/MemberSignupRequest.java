@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public record MemberSignupRequest(
         @Schema(
                 description = "교내 이메일",
-                example = "student@dongduk.ac.kr",
+                example = "20230774@dongduk.ac.kr",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         String email,
