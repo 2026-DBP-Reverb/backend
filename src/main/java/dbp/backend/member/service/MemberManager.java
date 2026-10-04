@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.Locale;
 
 @Service
-public class MemberService {
+public class MemberManager {
     private static final String EMAIL_PATTERN =
             "^20[0-9]{6}@dongduk\\.ac\\.kr$";
 
@@ -24,7 +24,7 @@ public class MemberService {
     private final MemberDao memberDao;
     private final PasswordEncoder passwordEncoder;
 
-    public MemberService(
+    public MemberManager(
             MemberDao memberDao,
             PasswordEncoder passwordEncoder
     ) {

@@ -8,7 +8,7 @@ import dbp.backend.common.util.SessionUtil;
 import dbp.backend.member.dto.MemberLoginRequest;
 import dbp.backend.member.dto.MemberResponse;
 import dbp.backend.member.dto.MemberSignupRequest;
-import dbp.backend.member.service.MemberService;
+import dbp.backend.member.service.MemberManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,10 +23,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/members")
 public class MemberController {
-    private final MemberService memberService;
+    private final MemberManager memberManager;
 
-    public MemberController(MemberService memberService) {
-        this.memberService = memberService;
+    public MemberController(MemberManager memberManager) {
+        this.memberManager = memberManager;
     }
 
     @Operation(summary = "회원가입")
@@ -34,7 +34,7 @@ public class MemberController {
     public ResponseBody<MemberResponse> signup(
             @RequestBody MemberSignupRequest request
     ) {
-        MemberResponse member = memberService.signup(request);
+        MemberResponse member = memberManager.signup(request);
         return ResponseBody.success(member);
     }
 
@@ -44,7 +44,7 @@ public class MemberController {
             @RequestBody MemberLoginRequest request,
             HttpServletRequest httpRequest
     ) {
-        MemberResponse member = memberService.login(request);
+        MemberResponse member = memberManager.login(request);
 
         SessionUtil.login(
                 httpRequest,
@@ -90,7 +90,7 @@ public class MemberController {
         }
 
         MemberResponse member =
-                memberService.findById(memberId);
+                memberManager.findById(memberId);
 
         return ResponseBody.success(member);
     }
