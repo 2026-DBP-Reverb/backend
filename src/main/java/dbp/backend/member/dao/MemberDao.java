@@ -37,16 +37,20 @@ public class MemberDao {
         }
     }
 
-    public void save(String email, String passwordHash) {
+    public void save(String email, String passwordHash, String nickname) {
         String sql = """
                 INSERT INTO MEMBER (
                     MEMBER_ID,
                     EMAIL,
-                    PASSWORD_HASH
+                    PASSWORD_HASH,
+                    NICKNAME,
+                    PROFILE_IMAGE_URL
                 ) VALUES (
                     MEMBER_SEQ.NEXTVAL,
                     ?,
-                    ?
+                    ?,
+                    ?,
+                    '/images/default-profile.png'
                 )
                 """;
 
@@ -55,7 +59,8 @@ public class MemberDao {
                     conn,
                     sql,
                     email,
-                    passwordHash
+                    passwordHash,
+                    nickname
             );
         } catch (SQLException e) {
             throw new DatabaseException(e);

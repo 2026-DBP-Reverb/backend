@@ -11,6 +11,7 @@ import dbp.backend.member.model.Member;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.Locale;
 
 @Service
@@ -46,7 +47,7 @@ public class MemberManager {
         String passwordHash =
                 passwordEncoder.encode(request.password());
 
-        memberDao.save(email, passwordHash);
+        memberDao.save(email, passwordHash, generateRandomNickname());
 
         Member savedMember = memberDao.findByEmail(email);
 
@@ -56,7 +57,7 @@ public class MemberManager {
             );
         }
 
-        return toResponse(savedMember);
+        return MemberResponse.from(savedMember);
     }
 
     public MemberResponse login(MemberLoginRequest request) {
@@ -83,7 +84,7 @@ public class MemberManager {
             );
         }
 
-        return toResponse(member);
+        return MemberResponse.from(member);
     }
 
     public MemberResponse findById(Long memberId) {
@@ -101,7 +102,7 @@ public class MemberManager {
             );
         }
 
-        return toResponse(member);
+        return MemberResponse.from(member);
     }
 
     private void validateSignupRequest(
@@ -142,20 +143,19 @@ public class MemberManager {
         }
     }
 
+    private String generateRandomNickname() {
+        String[] surnames = {"김", "이", "박"};
+        SecureRandom random = new SecureRandom();
+
+        String surname = surnames[random.nextInt(surnames.length)];
+        int number = random.nextInt(10000);
+
+        return surname + "솜솜" + String.format("%04d", number);
+    }
+
     private String normalizeEmail(String email) {
         return email
                 .trim()
                 .toLowerCase(Locale.ROOT);
-    }
-
-    private MemberResponse toResponse(Member member) {
-        return new MemberResponse(
-                member.getMemberId(),
-                member.getEmail(),
-                member.getProfileImageUrl(),
-                member.getInstagramId(),
-                member.getNickname(),
-                member.getCreatedAt()
-        );
     }
 }

@@ -1,10 +1,11 @@
 package dbp.backend.member.dto;
 
+import dbp.backend.member.model.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 
-public record MemberResponse (
+public record MemberResponse(
         @Schema(
                 description = "회원 ID",
                 example = "1"
@@ -28,7 +29,7 @@ public record MemberResponse (
                 example = "reverb_music"
         )
         String instagramId,
-        
+
         @Schema(
                 description = "닉네임",
                 example = "박솜솜"
@@ -40,5 +41,17 @@ public record MemberResponse (
                 example = "2026-10-03T19:30:00"
         )
         LocalDateTime createdAt
-){
+) {
+    private static final String IMAGE_SERVER_URI = "http://localhost:8080";
+
+    public static MemberResponse from(Member member) {
+        return new MemberResponse(
+                member.getMemberId(),
+                member.getEmail(),
+                IMAGE_SERVER_URI + member.getProfileImageUrl(),
+                member.getInstagramId(),
+                member.getNickname(),
+                member.getCreatedAt()
+        );
+    }
 }
