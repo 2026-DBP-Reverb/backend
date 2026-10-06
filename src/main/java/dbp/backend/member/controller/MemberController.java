@@ -13,11 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Member", description = "회원가입 및 로그인 API")
 @RestController
@@ -31,16 +28,16 @@ public class MemberController {
 
     @Operation(summary = "회원가입")
     @PostMapping("/signup")
-    public ResponseBody<MemberResponse> signup(
+    public ResponseEntity<ResponseBody<MemberResponse>> signup(
             @RequestBody MemberSignupRequest request
     ) {
         MemberResponse member = memberManager.signup(request);
-        return ResponseBody.success(member);
+        return ResponseEntity.ok(new ResponseBody<>(member));
     }
 
     @Operation(summary = "로그인")
     @PostMapping("/login")
-    public ResponseBody<MemberResponse> login(
+    public ResponseEntity<ResponseBody<MemberResponse>> login(
             @RequestBody MemberLoginRequest request,
             HttpServletRequest httpRequest
     ) {
@@ -51,7 +48,7 @@ public class MemberController {
                 member.memberId()
         );
 
-        return ResponseBody.success(member);
+        return ResponseEntity.ok(new ResponseBody<>(member));
     }
 
     @Operation(summary = "로그아웃")
@@ -59,7 +56,7 @@ public class MemberController {
             name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
     )
     @PostMapping("/logout")
-    public ResponseBody<Void> logout(
+    public ResponseEntity<ResponseBody<?>> logout(
             HttpServletRequest request
     ) {
         if (!SessionUtil.isLoggedIn(request)) {
@@ -69,7 +66,7 @@ public class MemberController {
         }
 
         SessionUtil.logout(request);
-        return ResponseBody.success(null);
+        return ResponseEntity.ok(new ResponseBody<>(null));
     }
 
     @Operation(summary = "내 정보 조회")
@@ -77,7 +74,7 @@ public class MemberController {
             name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
     )
     @GetMapping("/me")
-    public ResponseBody<MemberResponse> me(
+    public ResponseEntity<ResponseBody<MemberResponse>> me(
             HttpServletRequest request
     ) {
         Long memberId =
@@ -92,6 +89,6 @@ public class MemberController {
         MemberResponse member =
                 memberManager.findById(memberId);
 
-        return ResponseBody.success(member);
+        return ResponseEntity.ok(new ResponseBody<>(member));
     }
 }

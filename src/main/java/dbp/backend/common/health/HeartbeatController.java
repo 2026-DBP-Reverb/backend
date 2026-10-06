@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,11 +31,11 @@ public class HeartbeatController {
                     """)
             )
     )})
-    public ResponseBody<Map<String, String>> heartbeat() {
-        return ResponseBody.success(Map.of(
+    public ResponseEntity<ResponseBody<Map<String, String>>> heartbeat() {
+        return ResponseEntity.ok(new ResponseBody<>(Map.of(
                 "status", "UP",
                 "service", "Backend"
-        ));
+        )));
     }
 
     @GetMapping("/api/heartbeat/db")
@@ -46,7 +47,7 @@ public class HeartbeatController {
                     """)
             )
     )})
-    public ResponseBody<Map<String, String>> databaseHeartbeat() {
+    public ResponseEntity<ResponseBody<Map<String, String>>> databaseHeartbeat() {
         try (Connection conn = ConnectionManager.getConnection()) {
             Integer result = JDBCUtil.executeQuery(
                     conn,
@@ -63,10 +64,10 @@ public class HeartbeatController {
                 throw new DatabaseException();
             }
 
-            return ResponseBody.success(Map.of(
+            return ResponseEntity.ok(new ResponseBody<>(Map.of(
                     "status", "UP",
                     "database", "Oracle"
-            ));
+            )));
         } catch (SQLException e) {
             throw new DatabaseException(e);
         }
