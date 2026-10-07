@@ -1,4 +1,4 @@
-package dbp.backend.common.config;
+package dbp.backend.common.config.api;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

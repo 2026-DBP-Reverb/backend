@@ -1,6 +1,6 @@
 package dbp.backend.common.dao;
 
-import dbp.backend.common.config.DatabaseConfig;
+import dbp.backend.common.config.database.DatabaseConfig;
 import dbp.backend.common.exception.DatabaseException;
 import org.apache.commons.dbcp2.BasicDataSource;
 
