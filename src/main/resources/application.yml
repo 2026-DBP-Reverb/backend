@@ -5,6 +5,10 @@ server:
       cookie:
         http-only: true
 
+spring:
+  config:
+    import: optional:file:.env[.properties]
+
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -15,3 +19,9 @@ springdoc:
     persist-authorization: true
     display-request-duration: true
     default-models-expand-depth: 2
+
+spotify:
+  client-id: ${SPOTIFY_CLIENT_ID}
+  client-secret: ${SPOTIFY_CLIENT_SECRET}
+  api-base-url: https://api.spotify.com/v1
+  accounts-base-url: https://accounts.spotify.com
