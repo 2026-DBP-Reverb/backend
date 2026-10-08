@@ -6,7 +6,9 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.musictaste.dto.request.CompleteMusicTasteRequest;
-import dbp.backend.musictaste.dto.response.*;
+import dbp.backend.musictaste.dto.response.ArtistResponse;
+import dbp.backend.musictaste.dto.response.GenreResponse;
+import dbp.backend.musictaste.dto.response.TrackResponse;
 import dbp.backend.musictaste.service.MusicTasteManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,7 +20,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name = "Music Taste", description = "음악 취향 설정 API")
-@RestController("/api/music-tastes")
+@RestController
+@RequestMapping("/api/music-tastes")
 public class MusicTasteController {
     private final MusicTasteManager musicTasteManager;
 
