@@ -1,4 +1,4 @@
-package dbp.backend.common.config;
+package dbp.backend.common.config.database;
 
 import dbp.backend.common.exception.DatabaseException;
 

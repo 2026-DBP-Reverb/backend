@@ -1,6 +1,6 @@
 package dbp.backend.member.controller;
 
-import dbp.backend.common.config.OpenApiConfig;
+import dbp.backend.common.config.api.OpenApiConfig;
 import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
