@@ -3,6 +3,7 @@ package dbp.backend.recommendation.dao;
 import dbp.backend.common.dao.ConnectionManager;
 import dbp.backend.common.dao.JDBCUtil;
 import dbp.backend.common.exception.DatabaseException;
+import dbp.backend.recommendation.model.CommonTag;
 import dbp.backend.recommendation.model.MateCandidate;
 import org.springframework.stereotype.Repository;
 
@@ -78,6 +79,58 @@ public class MateRecommendationDao {
                     memberId,
                     memberId,
                     limit
+            );
+        } catch (SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
+
+    public List<CommonTag> findCommonTags(Long memberId){
+        try(Connection conn = ConnectionManager.getConnection()){
+            return JDBCUtil.executeQuery(
+                    conn,
+                    """
+                            SELECT o.member_id, 'ARTIST' AS tag_type, ma.artist_name AS name
+                            FROM member_artist_taste me
+                            JOIN member_artist_taste o
+                                ON o.spotify_artist_id = me.spotify_artist_id
+                               AND o.member_id <> me.member_id
+                            JOIN music_artist ma
+                                ON ma.spotify_artist_id = me.spotify_artist_id
+                            WHERE me.member_id = ?
+                            UNION ALL
+                            SELECT o.member_id, 'GENRE', g.genre_name
+                            FROM member_genre_taste me
+                            JOIN member_genre_taste o
+                                ON o.genre_id = me.genre_id
+                               AND o.member_id <> me.member_id
+                            JOIN genre g
+                                ON g.genre_id = me.genre_id
+                            WHERE me.member_id = ?
+                            UNION ALL
+                            SELECT o.member_id, 'TRACK', mt.track_name
+                            FROM member_track_taste me
+                            JOIN member_track_taste o
+                                ON o.spotify_track_id = me.spotify_track_id
+                               AND o.member_id <> me.member_id
+                            JOIN music_track mt
+                                ON mt.spotify_track_id = me.spotify_track_id
+                            WHERE me.member_id = ?
+                            """,
+                    rs -> {
+                        List<CommonTag> commonTags = new ArrayList<>();
+                        while(rs.next()){
+                            commonTags.add(new CommonTag(
+                                    rs.getLong("member_id"),
+                                    rs.getString("tag_type"),
+                                    rs.getString("name")
+                            ));
+                        }
+                        return commonTags;
+                    },
+                    memberId,
+                    memberId,
+                    memberId
             );
         } catch (SQLException e){
             throw new DatabaseException(e);
