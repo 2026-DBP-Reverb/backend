@@ -169,4 +169,49 @@ public class MateRecommendationDao {
             throw new DatabaseException(e);
         }
     }
+
+    // 두 회원 사이 진행 중인 매칭이 있는지 확인
+    public boolean isMatched(Long memberId, Long otherId){
+        try(Connection conn = ConnectionManager.getConnection()){
+            return JDBCUtil.executeQuery(
+                    conn,
+                    """
+                            SELECT COUNT(*) AS cnt
+                            FROM mate_match
+                            WHERE ended_at IS NULL
+                              AND (
+                                   (member_a_id = ? AND member_b_id = ?)
+                                OR (member_a_id = ? AND member_b_id = ?)
+                              )
+                            """,
+                    rs -> {
+                        rs.next();
+                        return rs.getInt("cnt") > 0;
+                    },
+                    memberId,
+                    otherId,
+                    otherId,
+                    memberId
+            );
+        } catch (SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
+
+    // 메이트 신청 저장
+    public void saveRequest(Long requesterId, Long recipientId){
+        try(Connection conn = ConnectionManager.getConnection()){
+            JDBCUtil.executeUpdate(
+                    conn,
+                    """
+                            INSERT INTO mate_match_request(request_id, requester_id, recipient_id, status)
+                            VALUES(match_req_seq.nextval, ?, ?, 'PENDING')
+                            """,
+                    requesterId,
+                    recipientId
+            );
+        } catch (SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
 }
