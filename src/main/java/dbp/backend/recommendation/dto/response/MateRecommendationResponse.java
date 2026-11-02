@@ -1,6 +1,7 @@
 package dbp.backend.recommendation.dto.response;
 
 import dbp.backend.recommendation.model.MateCandidate;
+import dbp.backend.recommendation.model.RequestStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
@@ -40,7 +41,11 @@ public record MateRecommendationResponse(
 
         @Schema(description = "공통 곡",
                 example = "[]")
-        List<String> commonTracks
+        List<String> commonTracks,
+
+        @Schema(description = "메이트 요청상태(NONE: 신청가능, SENT: 수락 대기중, RECEIVED: 상대가 먼저 신청함)",
+        example = "NONE")
+        RequestStatus requestStatus
 ) {
     private static final String IMAGE_SERVER_URI = "http://localhost:8080";
 
@@ -48,7 +53,8 @@ public record MateRecommendationResponse(
             MateCandidate mateCandidate,
             List<String> commonArtists,
             List<String> commonGenres,
-            List<String> commonTracks
+            List<String> commonTracks,
+            RequestStatus requestStatus
     ){
         return new MateRecommendationResponse(
                 mateCandidate.getMemberId(),
@@ -57,7 +63,8 @@ public record MateRecommendationResponse(
                 mateCandidate.getMatchRate(),
                 commonArtists,
                 commonGenres,
-                commonTracks
+                commonTracks,
+                requestStatus
         );
     }
 }

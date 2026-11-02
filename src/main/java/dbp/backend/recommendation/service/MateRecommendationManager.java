@@ -4,9 +4,11 @@ import dbp.backend.recommendation.dao.MateRecommendationDao;
 import dbp.backend.recommendation.dto.response.MateRecommendationResponse;
 import dbp.backend.recommendation.model.CommonTag;
 import dbp.backend.recommendation.model.MateCandidate;
+import dbp.backend.recommendation.model.RequestStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -26,13 +28,15 @@ public class MateRecommendationManager {
                 mateRecommendationDao.findTopCandidates(memberId, RECOMMENDATION_LIMIT);
         List<CommonTag> commonTags =
                 mateRecommendationDao.findCommonTags((memberId));
+        Map<Long, RequestStatus> requestStatuses = mateRecommendationDao.findPendingRequestStatuses((memberId));
 
         return candidates.stream()
                 .map(candidate -> MateRecommendationResponse.of(
                         candidate,
                         namesOf(commonTags, candidate.getMemberId(),"ARTIST"),
                         namesOf(commonTags, candidate.getMemberId(), "GENRE"),
-                        namesOf(commonTags, candidate.getMemberId(), "TRACK")
+                        namesOf(commonTags, candidate.getMemberId(), "TRACK"),
+                        requestStatuses.getOrDefault(candidate.getMemberId(), RequestStatus.NONE)
                 ))
                 .toList();
     }

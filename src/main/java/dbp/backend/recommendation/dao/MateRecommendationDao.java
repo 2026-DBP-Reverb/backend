@@ -5,12 +5,15 @@ import dbp.backend.common.dao.JDBCUtil;
 import dbp.backend.common.exception.DatabaseException;
 import dbp.backend.recommendation.model.CommonTag;
 import dbp.backend.recommendation.model.MateCandidate;
+import dbp.backend.recommendation.model.RequestStatus;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class MateRecommendationDao {
@@ -128,6 +131,36 @@ public class MateRecommendationDao {
                         }
                         return commonTags;
                     },
+                    memberId,
+                    memberId,
+                    memberId
+            );
+        } catch (SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
+
+    public Map<Long, RequestStatus> findPendingRequestStatuses(Long memberId){
+        try(Connection conn = ConnectionManager.getConnection()){
+            return JDBCUtil.executeQuery(
+                    conn,
+                    """
+                            SELECT
+                                CASE WHEN requester_id = ? THEN recipient_id ELSE requester_id END AS other_id,
+                                CASE WHEN requester_id = ? THEN 'SENT' ELSE 'RECEIVED' END AS direction
+                            FROM mate_match_request
+                            WHERE status = 'PENDING'
+                                AND (requester_id = ? OR recipient_id = ?)
+                            """,
+                    rs -> {
+                        Map<Long, RequestStatus> requestStatus = new HashMap<Long, RequestStatus>();
+                        while(rs.next()){
+                            requestStatus.put(rs.getLong("other_id"), RequestStatus.valueOf(rs.getString("direction"))
+                            );
+                        }
+                        return requestStatus;
+                    },
+                    memberId,
                     memberId,
                     memberId,
                     memberId
