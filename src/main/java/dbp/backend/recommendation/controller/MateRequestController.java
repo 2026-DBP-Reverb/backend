@@ -12,9 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,6 +33,17 @@ public class MateRequestController {
             HttpServletRequest request
     ) {
         return ResponseEntity.ok(new ResponseBody<>(mateRequestManager.getReceivedRequests(getMemberId(request))));
+    }
+
+    @Operation(summary = "메이트 요청 거절")
+    @PostMapping("/{requestId}/reject")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    public ResponseEntity<ResponseBody<Void>> rejectRequest(
+            @PathVariable Long requestId,
+            HttpServletRequest request
+    ) {
+        mateRequestManager.rejectRequest(getMemberId(request), requestId);
+        return ResponseEntity.ok(new ResponseBody<>(null));
     }
 
     private Long getMemberId(HttpServletRequest request) {

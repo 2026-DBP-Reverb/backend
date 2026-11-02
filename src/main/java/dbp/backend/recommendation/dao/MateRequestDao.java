@@ -13,8 +13,8 @@ import java.util.List;
 
 @Repository
 public class MateRequestDao {
-    public List<ReceivedRequest> findReceivedRequests(Long memberId){
-        try(Connection conn = ConnectionManager.getConnection()) {
+    public List<ReceivedRequest> findReceivedRequests(Long memberId) {
+        try (Connection conn = ConnectionManager.getConnection()) {
             return JDBCUtil.executeQuery(
                     conn,
                     """
@@ -22,11 +22,11 @@ public class MateRequestDao {
                             FROM mate_match_request r inner join member m on r.requester_id = m.member_id
                             WHERE recipient_id = ? AND STATUS = 'PENDING'
                             ORDER BY requested_at DESC
-                     
+                            
                             """,
                     rs -> {
                         List<ReceivedRequest> receivedRequests = new ArrayList<>();
-                        while(rs.next()) {
+                        while (rs.next()) {
                             receivedRequests.add(new ReceivedRequest(
                                     rs.getLong("request_id"),
                                     rs.getLong("requester_id"),
@@ -35,10 +35,29 @@ public class MateRequestDao {
                                     rs.getTimestamp("requested_at").toLocalDateTime()
                             ));
                         }
-                            return receivedRequests;
+                        return receivedRequests;
                     },
                     memberId);
-    }catch (SQLException e){
+        } catch (SQLException e) {
             throw new DatabaseException(e);
         }
-}}
+    }
+
+    public boolean rejectRequest(Long requestId, Long memberId) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            int updated = JDBCUtil.executeUpdate(
+                    conn,
+                    """
+                            UPDATE MATE_MATCH_REQUEST
+                            SET status = 'REJECTED', responded_at = systimestamp
+                            WHERE request_id = ? AND status = 'PENDING' AND recipient_id = ?
+                            """,
+                    requestId,
+                    memberId
+            );
+            return updated == 1;
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+}
