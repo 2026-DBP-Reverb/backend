@@ -40,15 +40,7 @@ public class MateRecommendationController {
                 mateRecommendationManager.getRecommendations(getMemberId(request))
         ));
     }
-    /*
-    public ResponseEntity<ResponseBody<Void>> completeMusicTaste(
-            @RequestBody CompleteMusicTasteRequest request,
-            HttpServletRequest httpRequest
-    ) {
-        musicTasteManager.completeMusicTaste(getMemberId(httpRequest), request);
-        return ResponseEntity.ok(new ResponseBody<>(null));
-    }
-    */
+
     @Operation(summary = "메이트 신청")
     @PostMapping("requests")
     @SecurityRequirement(
