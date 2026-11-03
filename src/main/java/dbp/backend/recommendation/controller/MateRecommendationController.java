@@ -5,6 +5,7 @@ import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.recommendation.dto.request.MateRequestCreateRequest;
+import dbp.backend.recommendation.dto.response.MateProfileResponse;
 import dbp.backend.recommendation.dto.response.MateRecommendationResponse;
 import dbp.backend.recommendation.service.MateRecommendationManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,6 +53,18 @@ public class MateRecommendationController {
     ){
         mateRecommendationManager.requestMate(getMemberId(httpRequest), request);
         return ResponseEntity.ok(new ResponseBody<>(null));
+    }
+
+    @Operation(summary = "메이트 상세 취향 프로필 조회")
+    @GetMapping("/{memberId}/profile")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    public ResponseEntity<ResponseBody<MateProfileResponse>> getMateProfile(
+            @PathVariable("memberId") Long targetMemberId,
+            HttpServletRequest request
+    ){
+        return ResponseEntity.ok(new ResponseBody<>(mateRecommendationManager.getMateProfile(getMemberId(request), targetMemberId)));
     }
 
     private Long getMemberId(HttpServletRequest request) {
