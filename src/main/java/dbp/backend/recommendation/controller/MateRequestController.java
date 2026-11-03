@@ -46,6 +46,17 @@ public class MateRequestController {
         return ResponseEntity.ok(new ResponseBody<>(null));
     }
 
+    @Operation(summary = "메이트 요청 수락")
+    @PostMapping("/{requestId}/accept")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    public ResponseEntity<ResponseBody<Void>> acceptRequest(
+            @PathVariable Long requestId,
+            HttpServletRequest request
+    ) {
+        mateRequestManager.acceptRequest(getMemberId(request), requestId);
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
+
     private Long getMemberId(HttpServletRequest request) {
         Long memberId = SessionUtil.getLoginMemberId(request);
         if (memberId == null) {

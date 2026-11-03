@@ -35,4 +35,12 @@ public class MateRequestManager {
         if(mateRequestDao.rejectRequest(requestId, memberId) == false)
             throw new ApiException(MateErrorCode.REQUEST_NOT_FOUND);
     }
+
+    /**
+     *내가 받은 대기 중인 메이트 요청을 수락 처리 + 매칭 생성
+     */
+    public void acceptRequest(Long memberId, Long requestId){
+        if(mateRequestDao.acceptRequest(requestId, memberId) == false)
+            throw new ApiException(MateErrorCode.REQUEST_NOT_FOUND);
+    }
 }
