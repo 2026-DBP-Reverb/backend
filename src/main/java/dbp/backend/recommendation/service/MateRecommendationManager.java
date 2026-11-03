@@ -111,6 +111,11 @@ public class MateRecommendationManager {
                 .map(GenreResponse::from)
                 .toList();
 
+        RequestStatus requestStatus = mateRecommendationDao.findPendingRequestStatuses(memberId)
+                .getOrDefault(targetMemberId, RequestStatus.NONE);
+//                            ──────────────
+//                            프로필을 보는 상대
+
         return new MateProfileResponse(
                 target.getMemberId(),
                 target.getNickname(),
@@ -118,7 +123,8 @@ public class MateRecommendationManager {
                 instagramId,
                 artists,
                 genres,
-                tracks
+                tracks,
+                requestStatus
         );
 
     }

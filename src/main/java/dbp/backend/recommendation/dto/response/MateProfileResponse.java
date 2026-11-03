@@ -3,6 +3,7 @@ package dbp.backend.recommendation.dto.response;
 import dbp.backend.musictaste.dto.response.ArtistResponse;
 import dbp.backend.musictaste.dto.response.GenreResponse;
 import dbp.backend.musictaste.dto.response.TrackResponse;
+import dbp.backend.recommendation.model.RequestStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
@@ -45,7 +46,13 @@ public record MateProfileResponse(
         @Schema(
                 description = "플레이리스트"
         )
-        List<TrackResponse> tracks
+        List<TrackResponse> tracks,
+
+        @Schema(
+                description = "메이트 요청 상태 (NONE: 신청 가능, SENT: 수락 대기중, RECEIVED: 상대가 먼저 신청함)",
+                example = "NONE"
+        )
+        RequestStatus requestStatus
 ) {
 
 }
