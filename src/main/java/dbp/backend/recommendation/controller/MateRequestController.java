@@ -5,6 +5,7 @@ import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
+import dbp.backend.recommendation.dto.response.MyMateResponse;
 import dbp.backend.recommendation.dto.response.ReceivedRequestResponse;
 import dbp.backend.recommendation.service.MateRequestManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,5 +64,14 @@ public class MateRequestController {
             throw new ApiException(CommonErrorCode.UNAUTHORIZED);
         }
         return memberId;
+    }
+
+    @Operation(summary = "나의 메이트 목록 조회")
+    @GetMapping("/my")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    public ResponseEntity<ResponseBody<List<MyMateResponse>>> getMyMates(
+            HttpServletRequest request
+    ) {
+        return ResponseEntity.ok(new ResponseBody<>(mateRequestManager.getMyMates(getMemberId(request))));
     }
 }

@@ -3,6 +3,7 @@ package dbp.backend.recommendation.dao;
 import dbp.backend.common.dao.ConnectionManager;
 import dbp.backend.common.dao.JDBCUtil;
 import dbp.backend.common.exception.DatabaseException;
+import dbp.backend.recommendation.model.MyMate;
 import dbp.backend.recommendation.model.ReceivedRequest;
 import org.springframework.stereotype.Repository;
 
@@ -102,6 +103,59 @@ public class MateRequestDao {
                 conn.setAutoCommit(originalAutoCommit);
             }
         } catch (SQLException e) {                        // 바깥 try의 catch
+            throw new DatabaseException(e);
+        }
+    }
+
+    // 나의 메이트 목록 조회 (매칭 완료 + 보낸 요청 + 받은 요청)
+    public List<MyMate> findMyMates(Long memberId) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            return JDBCUtil.executeQuery(
+                    conn,
+                    """
+                            SELECT 'MATCHED' AS status, mm.request_id,
+                                   m.member_id, m.nickname, m.profile_image_url, m.instagram_id
+                            FROM mate_match mm
+                            JOIN member m
+                              ON m.member_id = CASE WHEN mm.member_a_id = ? THEN mm.member_b_id ELSE mm.member_a_id END
+                            WHERE mm.ended_at IS NULL
+                              AND (mm.member_a_id = ? OR mm.member_b_id = ?)
+                            UNION ALL
+                            
+                            SELECT 'SENT', r.request_id,
+                                   m.member_id, m.nickname, m.profile_image_url, CAST(NULL AS VARCHAR2(100))
+                            FROM mate_match_request r
+                            JOIN member m ON m.member_id = r.recipient_id
+                            WHERE r.requester_id = ? AND r.status = 'PENDING'
+                            UNION ALL
+                            
+                            SELECT 'RECEIVED', r.request_id,
+                                   m.member_id, m.nickname, m.profile_image_url, CAST(NULL AS VARCHAR2(100))
+                            FROM mate_match_request r
+                            JOIN member m ON m.member_id = r.requester_id
+                            WHERE r.recipient_id = ? AND r.status = 'PENDING'
+                            """,
+                    rs -> {
+                        List<MyMate> myMates = new ArrayList<>();
+                        while (rs.next()) {
+                            myMates.add(new MyMate(
+                                    rs.getString("status"),
+                                    rs.getLong("request_id"),
+                                    rs.getLong("member_id"),
+                                    rs.getString("nickname"),
+                                    rs.getString("profile_image_url"),
+                                    rs.getString("instagram_id")
+                            ));
+                        }
+                        return myMates;
+                    },
+                    memberId,
+                    memberId,
+                    memberId,
+                    memberId,
+                    memberId
+            );
+        } catch (SQLException e) {
             throw new DatabaseException(e);
         }
     }

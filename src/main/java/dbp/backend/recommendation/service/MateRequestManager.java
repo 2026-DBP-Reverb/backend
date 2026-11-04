@@ -2,6 +2,7 @@ package dbp.backend.recommendation.service;
 
 import dbp.backend.common.exception.ApiException;
 import dbp.backend.recommendation.dao.MateRequestDao;
+import dbp.backend.recommendation.dto.response.MyMateResponse;
 import dbp.backend.recommendation.dto.response.ReceivedRequestResponse;
 import dbp.backend.recommendation.exception.MateErrorCode;
 import org.springframework.stereotype.Service;
@@ -42,5 +43,15 @@ public class MateRequestManager {
     public void acceptRequest(Long memberId, Long requestId){
         if(mateRequestDao.acceptRequest(requestId, memberId) == false)
             throw new ApiException(MateErrorCode.REQUEST_NOT_FOUND);
+    }
+
+    /**
+     *나의 메이트 목록 조회 (매칭 완료 + 보낸 요청 대기 중 + 받은 요청)
+     */
+    public List<MyMateResponse> getMyMates(Long memberId){
+        return mateRequestDao.findMyMates(memberId)
+                .stream()
+                .map(MyMateResponse::from)
+                .toList();
     }
 }
