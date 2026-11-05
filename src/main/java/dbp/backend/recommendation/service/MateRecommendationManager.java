@@ -34,11 +34,19 @@ public class MateRecommendationManager {
     }
 
     public List<MateRecommendationResponse> getRecommendations(Long memberId) {
+
+        Map<Long, RequestStatus> requestStatuses = mateRecommendationDao.findPendingRequestStatuses((memberId));
         List<MateCandidate> candidates =
                 mateRecommendationDao.findTopCandidates(memberId, RECOMMENDATION_LIMIT);
+
+// 추천된 후보들의 번호만 뽑기 → [21, 5, 8, ...]
+        List<Long> candidateIds = candidates.stream()
+                .map(MateCandidate::getMemberId)
+                .toList();
+
+// 그 후보들과의 공통 태그만 조회
         List<CommonTag> commonTags =
-                mateRecommendationDao.findCommonTags((memberId));
-        Map<Long, RequestStatus> requestStatuses = mateRecommendationDao.findPendingRequestStatuses((memberId));
+                mateRecommendationDao.findCommonTags(memberId, candidateIds);
 
         return candidates.stream()
                 .map(candidate -> MateRecommendationResponse.of(
