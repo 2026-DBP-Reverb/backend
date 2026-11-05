@@ -37,7 +37,7 @@ public class MateRequestController {
     }
 
     @Operation(summary = "메이트 요청 거절")
-    @PostMapping("/{requestId}/reject")
+    @PutMapping("/{requestId}/reject")
     @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
     public ResponseEntity<ResponseBody<Void>> rejectRequest(
             @PathVariable Long requestId,
@@ -48,7 +48,7 @@ public class MateRequestController {
     }
 
     @Operation(summary = "메이트 요청 수락")
-    @PostMapping("/{requestId}/accept")
+    @PutMapping("/{requestId}/accept")
     @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
     public ResponseEntity<ResponseBody<Void>> acceptRequest(
             @PathVariable Long requestId,
