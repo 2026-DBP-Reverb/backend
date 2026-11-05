@@ -10,10 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class MateRecommendationDao {
@@ -62,8 +59,10 @@ public class MateRecommendationDao {
                                 OR (mm.member_b_id = ? AND mm.member_a_id = c.other_id)
                               )
                         )
-                        ORDER BY match_rate DESC
-                        FETCH FIRST ? ROWS ONLY
+                            ORDER BY
+                                c.inter / (mc.n + oc.n - c.inter) DESC,
+                                m.member_id ASC
+                            FETCH FIRST ? ROWS ONLY
                         """,
                         rs -> {
                         List<MateCandidate> candidates = new ArrayList<>();
@@ -88,41 +87,63 @@ public class MateRecommendationDao {
         }
     }
 
-    public List<CommonTag> findCommonTags(Long memberId){
-        try(Connection conn = ConnectionManager.getConnection()){
+    // 나와 추천 후보들 사이의 공통 취향 태그 조회 (후보로 뽑힌 회원만)
+    public List<CommonTag> findCommonTags(Long memberId, List<Long> candidateIds) {
+
+        // 후보가 없으면 IN () 이 되어 SQL 에러 → 바로 빈 목록 반환
+        if (candidateIds.isEmpty()) {
+            return List.of();
+        }
+
+        // 후보 수만큼 "?, ?, ?" 만들기
+        String placeholders = String.join(", ", Collections.nCopies(candidateIds.size(), "?"));
+
+        String sql = """
+            SELECT o.member_id, 'ARTIST' AS tag_type, ma.artist_name AS name
+            FROM member_artist_taste me
+            JOIN member_artist_taste o
+                ON o.spotify_artist_id = me.spotify_artist_id
+               AND o.member_id <> me.member_id
+            JOIN music_artist ma
+                ON ma.spotify_artist_id = me.spotify_artist_id
+            WHERE me.member_id = ?
+              AND o.member_id IN (%s)
+            UNION ALL
+            SELECT o.member_id, 'GENRE', g.genre_name
+            FROM member_genre_taste me
+            JOIN member_genre_taste o
+                ON o.genre_id = me.genre_id
+               AND o.member_id <> me.member_id
+            JOIN genre g
+                ON g.genre_id = me.genre_id
+            WHERE me.member_id = ?
+              AND o.member_id IN (%s)
+            UNION ALL
+            SELECT o.member_id, 'TRACK', mt.track_name
+            FROM member_track_taste me
+            JOIN member_track_taste o
+                ON o.spotify_track_id = me.spotify_track_id
+               AND o.member_id <> me.member_id
+            JOIN music_track mt
+                ON mt.spotify_track_id = me.spotify_track_id
+            WHERE me.member_id = ?
+              AND o.member_id IN (%s)
+            """.formatted(placeholders, placeholders, placeholders);
+
+        // 순서대로 값 담기: [나, 후보들...]
+        List<Object> params = new ArrayList<>();
+        for (int i = 0; i < 3; i++) { // 아티스트, 장르, 곡 3덩어리
+            params.add(memberId);
+            params.addAll(candidateIds);
+        }
+
+        try (Connection conn = ConnectionManager.getConnection()) {
             return JDBCUtil.executeQuery(
                     conn,
-                    """
-                            SELECT o.member_id, 'ARTIST' AS tag_type, ma.artist_name AS name
-                            FROM member_artist_taste me
-                            JOIN member_artist_taste o
-                                ON o.spotify_artist_id = me.spotify_artist_id
-                               AND o.member_id <> me.member_id
-                            JOIN music_artist ma
-                                ON ma.spotify_artist_id = me.spotify_artist_id
-                            WHERE me.member_id = ?
-                            UNION ALL
-                            SELECT o.member_id, 'GENRE', g.genre_name
-                            FROM member_genre_taste me
-                            JOIN member_genre_taste o
-                                ON o.genre_id = me.genre_id
-                               AND o.member_id <> me.member_id
-                            JOIN genre g
-                                ON g.genre_id = me.genre_id
-                            WHERE me.member_id = ?
-                            UNION ALL
-                            SELECT o.member_id, 'TRACK', mt.track_name
-                            FROM member_track_taste me
-                            JOIN member_track_taste o
-                                ON o.spotify_track_id = me.spotify_track_id
-                               AND o.member_id <> me.member_id
-                            JOIN music_track mt
-                                ON mt.spotify_track_id = me.spotify_track_id
-                            WHERE me.member_id = ?
-                            """,
+                    sql,
                     rs -> {
                         List<CommonTag> commonTags = new ArrayList<>();
-                        while(rs.next()){
+                        while (rs.next()) {
                             commonTags.add(new CommonTag(
                                     rs.getLong("member_id"),
                                     rs.getString("tag_type"),
@@ -131,11 +152,9 @@ public class MateRecommendationDao {
                         }
                         return commonTags;
                     },
-                    memberId,
-                    memberId,
-                    memberId
+                    params.toArray()
             );
-        } catch (SQLException e){
+        } catch (SQLException e) {
             throw new DatabaseException(e);
         }
     }
@@ -176,17 +195,17 @@ public class MateRecommendationDao {
             return JDBCUtil.executeQuery(
                     conn,
                     """
-                            SELECT COUNT(*) AS cnt
+                            SELECT 1
                             FROM mate_match
                             WHERE ended_at IS NULL
                               AND (
                                    (member_a_id = ? AND member_b_id = ?)
                                 OR (member_a_id = ? AND member_b_id = ?)
                               )
+                             FETCH FIRST 1 ROW ONLY
                             """,
                     rs -> {
-                        rs.next();
-                        return rs.getInt("cnt") > 0;
+                        return rs.next();
                     },
                     memberId,
                     otherId,
