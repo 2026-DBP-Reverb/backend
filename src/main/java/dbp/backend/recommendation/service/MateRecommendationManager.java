@@ -3,8 +3,14 @@ package dbp.backend.recommendation.service;
 import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.member.dao.MemberDao;
+import dbp.backend.member.model.Member;
+import dbp.backend.musictaste.dao.MusicTasteDao;
+import dbp.backend.musictaste.dto.response.ArtistResponse;
+import dbp.backend.musictaste.dto.response.GenreResponse;
+import dbp.backend.musictaste.dto.response.TrackResponse;
 import dbp.backend.recommendation.dao.MateRecommendationDao;
 import dbp.backend.recommendation.dto.request.MateRequestCreateRequest;
+import dbp.backend.recommendation.dto.response.MateProfileResponse;
 import dbp.backend.recommendation.dto.response.MateRecommendationResponse;
 import dbp.backend.recommendation.exception.MateErrorCode;
 import dbp.backend.recommendation.model.CommonTag;
@@ -15,22 +21,22 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
-import static dbp.backend.recommendation.model.RequestStatus.RECEIVED;
-import static dbp.backend.recommendation.model.RequestStatus.SENT;
-
 
 @Service
 public class MateRecommendationManager {
     private final MateRecommendationDao mateRecommendationDao;
     private final MemberDao memberDao;
     private static final int RECOMMENDATION_LIMIT = 10;
+    private final MusicTasteDao musicTasteDao;
+    private static final String IMAGE_SERVER_URI = "http://localhost:8080";
 
     public MateRecommendationManager(
             MateRecommendationDao mateRecommendationDao,
-            MemberDao memberDao
+            MemberDao memberDao, MusicTasteDao musicTasteDao
     ){
         this.mateRecommendationDao = mateRecommendationDao;
         this.memberDao = memberDao;
+        this.musicTasteDao = musicTasteDao;
     }
 
     public List<MateRecommendationResponse> getRecommendations(Long memberId) {
@@ -85,6 +91,50 @@ public class MateRecommendationManager {
         if(status == RequestStatus.RECEIVED)
             throw new ApiException(MateErrorCode.REQUEST_ALREADY_RECEIVED);
         mateRecommendationDao.saveRequest(memberId, request.recipientId());
+    }
+
+    /**
+     * 상대 회원의 상세 취향 프로필 조회 (아티스트/장르/플레이리스트)
+     * 인스타그램 아이디는 매칭된 상대일 때만 공개
+     */
+    public MateProfileResponse getMateProfile(Long memberId, Long targetMemberId) {
+        // memberId = 나, targetMemberId = 보고 싶은 상대
+       Member target = memberDao.findById(targetMemberId);
+        if(target == null)
+            throw new ApiException(MateErrorCode.MATE_NOT_FOUND);
+
+        String instagramId = null;
+        if(mateRecommendationDao.isMatched(memberId, targetMemberId))
+            instagramId = target.getInstagramId();
+
+        List<TrackResponse> tracks = musicTasteDao.getTrackTastes(targetMemberId)
+                .stream().map(TrackResponse::from).toList();
+
+        List<ArtistResponse> artists = musicTasteDao.getArtistTastes(targetMemberId)
+                .stream().map(ArtistResponse::from).toList();
+
+        List<GenreResponse> genres = musicTasteDao.getGenres(targetMemberId)
+                .stream()
+                .filter(genre -> genre.isSelected())
+                .map(GenreResponse::from)
+                .toList();
+
+        RequestStatus requestStatus = mateRecommendationDao.findPendingRequestStatuses(memberId)
+                .getOrDefault(targetMemberId, RequestStatus.NONE);
+//                            ──────────────
+//                            프로필을 보는 상대
+
+        return new MateProfileResponse(
+                target.getMemberId(),
+                target.getNickname(),
+                IMAGE_SERVER_URI + target.getProfileImageUrl(),
+                instagramId,
+                artists,
+                genres,
+                tracks,
+                requestStatus
+        );
+
     }
 
 }

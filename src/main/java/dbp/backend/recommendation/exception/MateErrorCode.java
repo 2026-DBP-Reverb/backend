@@ -22,6 +22,10 @@ public enum MateErrorCode implements ErrorCode {
     REQUEST_ALREADY_RECEIVED(
             HttpServletResponse.SC_CONFLICT,
             "상대가 이미 나에게 메이트 신청을 하였습니다."
+    ),
+    REQUEST_NOT_FOUND(
+            HttpServletResponse.SC_NOT_FOUND,
+            "처리할 수 있는 메이트 요청이 없습니다."
     );
 
     private final int statusCode;
