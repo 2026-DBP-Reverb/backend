@@ -108,3 +108,88 @@ CREATE TABLE mate_match (
     FOREIGN KEY (request_id, member_a_id, member_b_id)
         REFERENCES mate_match_request(request_id, requester_id, recipient_id)
 );
+
+CREATE SEQUENCE meetup_seq START WITH 1 INCREMENT BY 1;
+
+CREATE TABLE meetup (
+    meetup_id      NUMBER NOT NULL,
+    host_member_id NUMBER NOT NULL,
+    title          VARCHAR2(200)   NOT NULL,
+    description    CLOB,
+    image_url      VARCHAR2(500),
+    category       VARCHAR2(20)    DEFAULT 'OTHER' NOT NULL,
+    place          VARCHAR2(255)   NOT NULL,
+    capacity       NUMBER(5)       DEFAULT 10 NOT NULL,
+    starts_at      DATE   NOT NULL,
+    ends_at        DATE,
+    status         VARCHAR2(12)    DEFAULT 'OPEN' NOT NULL,
+    created_at     TIMESTAMP WITH LOCAL TIME ZONE DEFAULT systimestamp NOT NULL,
+
+    CONSTRAINT meetup_pk PRIMARY KEY (meetup_id),
+
+    CONSTRAINT meetup_host_member_fk FOREIGN KEY (host_member_id)
+        REFERENCES member (member_id),
+
+    CONSTRAINT meetup_category_ck
+        CHECK (
+            category IN (
+                         'CONCERT',
+                         'FESTIVAL',
+                         'LISTENING',
+                         'OTHER'
+                )
+            ),
+
+    CONSTRAINT meetup_capacity_ck CHECK (capacity >= 1),
+
+    CONSTRAINT meetup_status_ck
+        CHECK (
+            status IN (
+                       'OPEN',
+                       'CLOSED',
+                       'COMPLETED',
+                       'CANCELLED'
+                )
+            ),
+
+    CONSTRAINT meetup_time_ck
+        CHECK (
+            ends_at IS NULL
+                OR ends_at > starts_at
+            )
+);
+
+CREATE INDEX meetup_host_idx ON meetup (host_member_id);
+
+CREATE TABLE meetup_participant
+(
+    meetup_id NUMBER NOT NULL,
+    member_id NUMBER NOT NULL,
+    status    VARCHAR2(8) DEFAULT 'ACTIVE' NOT NULL,
+    joined_at TIMESTAMP WITH LOCAL TIME ZONE DEFAULT systimestamp NOT NULL,
+    left_at   TIMESTAMP WITH LOCAL TIME ZONE,
+
+    CONSTRAINT meetup_participant_pk PRIMARY KEY (meetup_id, member_id),
+
+    CONSTRAINT meetup_participant_meetup_fk FOREIGN KEY (meetup_id)
+            REFERENCES meetup (meetup_id),
+
+    CONSTRAINT meetup_participant_member_fk FOREIGN KEY (member_id)
+            REFERENCES member (member_id),
+
+    CONSTRAINT meetup_participant_status_ck
+        CHECK (
+            status IN (
+                       'ACTIVE',
+                       'LEFT'
+                )
+            ),
+
+    CONSTRAINT meetup_participant_time_ck
+        CHECK (
+            left_at IS NULL
+                OR left_at >= joined_at
+            )
+);
+
+CREATE INDEX meetup_participant_member_idx ON meetup_participant (member_id, meetup_id);
