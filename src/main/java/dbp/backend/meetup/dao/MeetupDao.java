@@ -5,12 +5,15 @@ import dbp.backend.common.dao.JDBCUtil;
 import dbp.backend.common.exception.DatabaseException;
 import dbp.backend.meetup.model.Meetup;
 import dbp.backend.meetup.model.MeetupCategory;
+import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class MeetupDao {
@@ -98,7 +101,16 @@ public class MeetupDao {
         }
     }
 
+
     // 저장된 모임 조회
+    public Meetup findById(Long meetupId){
+        try(Connection conn = ConnectionManager.getConnection()){
+            return findById(conn, meetupId);
+        }catch(SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
+
     private Meetup findById(Connection conn, Long meetupId) throws SQLException{
         String sql = """
                 SELECT
@@ -150,4 +162,52 @@ public class MeetupDao {
         );
     }
 
+    // 모임에 참여중인 회원 목록 조회
+    public List<MeetupParticipant> findActiveParticipants(
+            Long meetupId
+    ){
+        String sql = """
+            SELECT
+                m.member_id,
+                m.nickname,
+                m.profile_image_url
+            FROM meetup_participant mp
+            JOIN member m
+                ON m.member_id = mp.member_id
+            JOIN meetup mt
+                ON mt.meetup_id = mp.meetup_id
+            WHERE mp.meetup_id = ?
+              AND mp.status = 'ACTIVE'
+            ORDER BY CASE
+                    WHEN m.member_id = mt.host_member_id
+                    THEN 0
+                    ELSE 1
+                END,
+                mp.joined_at
+            """;
+
+        try (Connection conn = ConnectionManager.getConnection()){
+            return JDBCUtil.executeQuery(
+                    conn,
+                    sql,
+                    rs -> {
+                        List<MeetupParticipant> participants = new ArrayList<>();
+
+                        while(rs.next()){
+                            participants.add(
+                                    new MeetupParticipant(
+                                            rs.getLong("member_id"),
+                                            rs.getString("nickname"),
+                                            rs.getString("profile_image_url")
+                                    )
+                            );
+                        }
+                        return participants;
+                    },
+                    meetupId
+            );
+        }catch (SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
 }

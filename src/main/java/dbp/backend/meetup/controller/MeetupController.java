@@ -6,6 +6,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.response.MeetupDetailResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.service.MeetupManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,10 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Meetup", description = "모임 API")
 @RestController
@@ -38,14 +36,38 @@ public class MeetupController {
             @RequestBody MeetupCreateRequest request,
             HttpServletRequest httpRequest
     ){
-        Long hostMemberId = SessionUtil.getLoginMemberId(httpRequest);
-
-        if(hostMemberId == null){
-            throw new ApiException(CommonErrorCode.UNAUTHORIZED);
-        }
+        Long hostMemberId = getMemberId(httpRequest);
 
         MeetupResponse response = meetupManager.createMeetup(hostMemberId,request);
 
         return ResponseEntity.ok(new ResponseBody<>(response));
+    }
+
+    @Operation(summary = "모임 상세 조회")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @GetMapping("/{meetupId}")
+    public ResponseEntity<ResponseBody<MeetupDetailResponse>> getMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            HttpServletRequest httpRequest
+    ){
+        Long loginMemberId = getMemberId(httpRequest);
+
+        MeetupDetailResponse response = meetupManager.getMeetup(meetupId,loginMemberId);
+
+        return ResponseEntity.ok(new ResponseBody<>(response));
+    }
+
+    private Long getMemberId(HttpServletRequest request) {
+        Long memberId = SessionUtil.getLoginMemberId(request);
+
+        if (memberId == null) {
+            throw new ApiException(
+                    CommonErrorCode.UNAUTHORIZED
+            );
+        }
+
+        return memberId;
     }
 }
