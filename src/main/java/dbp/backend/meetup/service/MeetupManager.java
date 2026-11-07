@@ -45,6 +45,18 @@ public class MeetupManager {
         return MeetupResponse.from(savedMeetup);
     }
 
+    public MeetupResponse getMeetup(Long meetupId){
+        Meetup meetup = meetupDao.findById(meetupId);
+
+        if(meetup == null){
+            throw new ApiException(
+                MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+        }
+
+        return MeetupResponse.from(meetup);
+    }
+
     private void validateCreateRequest(MeetupCreateRequest request){
         if (request.title() == null || request.title().isBlank()) {
             throw new ApiException(MeetupErrorCode.INVALID_TITLE);
