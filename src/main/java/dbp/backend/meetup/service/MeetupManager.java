@@ -3,13 +3,16 @@ package dbp.backend.meetup.service;
 import dbp.backend.common.exception.ApiException;
 import dbp.backend.meetup.dao.MeetupDao;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.response.MeetupDetailResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.meetup.model.Meetup;
+import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class MeetupManager {
@@ -45,7 +48,7 @@ public class MeetupManager {
         return MeetupResponse.from(savedMeetup);
     }
 
-    public MeetupResponse getMeetup(Long meetupId){
+    public MeetupDetailResponse getMeetup(Long meetupId, Long loginMemberId){
         Meetup meetup = meetupDao.findById(meetupId);
 
         if(meetup == null){
@@ -53,8 +56,9 @@ public class MeetupManager {
                 MeetupErrorCode.MEETUP_NOT_FOUND
             );
         }
+        List<MeetupParticipant> participants = meetupDao.findActiveParticipants(meetupId);
 
-        return MeetupResponse.from(meetup);
+        return MeetupDetailResponse.from(meetup,participants,loginMemberId);
     }
 
     private void validateCreateRequest(MeetupCreateRequest request){

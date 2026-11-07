@@ -6,6 +6,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.response.MeetupDetailResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.service.MeetupManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,13 +48,13 @@ public class MeetupController {
             name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
     )
     @GetMapping("/{meetupId}")
-    public ResponseEntity<ResponseBody<MeetupResponse>> getMeetup(
+    public ResponseEntity<ResponseBody<MeetupDetailResponse>> getMeetup(
             @PathVariable("meetupId") Long meetupId,
             HttpServletRequest httpRequest
     ){
-        getMemberId(httpRequest);
+        Long loginMemberId = getMemberId(httpRequest);
 
-        MeetupResponse response = meetupManager.getMeetup(meetupId);
+        MeetupDetailResponse response = meetupManager.getMeetup(meetupId,loginMemberId);
 
         return ResponseEntity.ok(new ResponseBody<>(response));
     }
