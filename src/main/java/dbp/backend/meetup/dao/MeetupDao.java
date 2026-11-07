@@ -98,7 +98,16 @@ public class MeetupDao {
         }
     }
 
+
     // 저장된 모임 조회
+    public Meetup findById(Long meetupId){
+        try(Connection conn = ConnectionManager.getConnection()){
+            return findById(conn, meetupId);
+        }catch(SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
+
     private Meetup findById(Connection conn, Long meetupId) throws SQLException{
         String sql = """
                 SELECT

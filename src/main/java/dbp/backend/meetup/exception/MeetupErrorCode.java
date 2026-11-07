@@ -23,6 +23,10 @@ public enum MeetupErrorCode implements ErrorCode {
     INVALID_STARTS_AT(
             HttpServletResponse.SC_BAD_REQUEST,
             "모임 시작 일시는 현재 이후여야 합니다."
+    ),
+    MEETUP_NOT_FOUND(
+            HttpServletResponse.SC_NOT_FOUND,
+            "모임을 찾을 수 없습니다."
     );
     private final int statusCode;
     private final String detail;
