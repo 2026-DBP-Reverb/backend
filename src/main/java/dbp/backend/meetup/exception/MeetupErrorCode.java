@@ -1,0 +1,44 @@
+package dbp.backend.meetup.exception;
+
+import dbp.backend.common.exception.code.ErrorCode;
+import jakarta.servlet.http.HttpServletResponse;
+
+public enum MeetupErrorCode implements ErrorCode {
+    INVALID_TITLE(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 제목은 필수입니다."
+    ),
+    INVALID_CAPACITY(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 정원은 1명 이상이어야 합니다."
+    ),
+    INVALID_PLACE(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 장소는 필수입니다."
+    ),
+    INVALID_CATEGORY(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "카테고리는 필수입니다."
+    ),
+    INVALID_STARTS_AT(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 시작 일시는 현재 이후여야 합니다."
+    );
+    private final int statusCode;
+    private final String detail;
+
+    MeetupErrorCode(int statusCode, String detail){
+        this.statusCode = statusCode;
+        this.detail = detail;
+    }
+
+    @Override
+    public int getStatusCode(){
+        return statusCode;
+    }
+
+    @Override
+    public String getDetail(){
+        return detail;
+    }
+}
