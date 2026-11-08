@@ -19,7 +19,7 @@ public record MeetupParticipantResponse(
 
         @Schema(
                 description = "참여 회원 프로필 이미지 URL",
-                example = "/images/default-profile.png"
+                example = "https://example.com/images/default-profile.png"
         )
         String profileImageUrl
 ){

@@ -28,16 +28,20 @@ public class MeetupManager {
         Long hostMemberId,
         MeetupCreateRequest request
     ){
-        validateCreateRequest(request);
+        String title = trim(request.title());
+        String place = trim(request.place());
+        String imageUrl = trim(request.imageUrl());
+
+        validateCreateRequest(request, title, place, imageUrl);
 
         Meetup meetup = new Meetup(
                 null,
                 hostMemberId,
-                request.title().trim(),
+                title,
                 request.description(),
-                request.imageUrl(),
+                imageUrl,
                 request.category(),
-                request.place().trim(),
+                place,
                 request.capacity(),
                 request.startsAt(),
                 null,
@@ -74,7 +78,11 @@ public class MeetupManager {
         Meetup meetup = getMeetupOrThrow(meetupId);
         validateMeetupChange(meetup, loginMemberId);
 
-        validateUpdateRequest(request);
+        String title = trim(request.title());
+        String place = trim(request.place());
+        String imageUrl = trim(request.imageUrl());
+
+        validateUpdateRequest(request, title, place, imageUrl);
 
         int participantCount = meetupDao.countActiveParticipants(meetupId);
 
@@ -87,11 +95,11 @@ public class MeetupManager {
         Meetup updateMeetup = new Meetup(
                 meetup.getMeetupId(),
                 meetup.getHostMemberId(),
-                request.title().trim(),
+                title,
                 request.description(),
-                request.imageUrl(),
+                imageUrl,
                 request.category(),
-                request.place().trim(),
+                place,
                 request.capacity(),
                 request.startsAt(),
                 meetup.getEndsAt(),
@@ -163,18 +171,37 @@ public class MeetupManager {
         }
     }
 
-    //모임 생성 요청값 검증
-    private void validateCreateRequest(MeetupCreateRequest request){
-        if (request.title() == null || request.title().isBlank()) {
+    // 모임 생성 요청값 검증
+    private void validateCreateRequest(
+            MeetupCreateRequest request,
+            String title,
+            String place,
+            String imageUrl
+    ){
+        if (title == null || title.isEmpty()) {
             throw new ApiException(MeetupErrorCode.INVALID_TITLE);
         }
 
-        if (request.capacity() == null || request.capacity() < 1) {
+        if (title.length() > 200) {
+            throw new ApiException(MeetupErrorCode.INVALID_TITLE_LENGTH);
+        }
+
+        if (request.capacity() == null
+                || request.capacity() < 1
+                || request.capacity() > 99999) {
             throw new ApiException(MeetupErrorCode.INVALID_CAPACITY);
         }
 
-        if (request.place() == null || request.place().isBlank()) {
+        if (place == null || place.isEmpty()) {
             throw new ApiException(MeetupErrorCode.INVALID_PLACE);
+        }
+
+        if (place.length() > 255) {
+            throw new ApiException(MeetupErrorCode.INVALID_PLACE_LENGTH);
+        }
+
+        if (imageUrl != null && imageUrl.length() > 500) {
+            throw new ApiException(MeetupErrorCode.INVALID_IMAGE_URL_LENGTH);
         }
 
         if (request.category() == null) {
@@ -187,38 +214,50 @@ public class MeetupManager {
         }
     }
 
-
     // 모임 수정 요청값 검증
-    private void validateUpdateRequest(MeetupUpdateRequest request){
-        if (request.title() == null || request.title().isBlank()) {
-            throw new ApiException(
-                    MeetupErrorCode.INVALID_TITLE
-            );
+    private void validateUpdateRequest(
+            MeetupUpdateRequest request,
+            String title,
+            String place,
+            String imageUrl
+    ){
+        if (title == null || title.isEmpty()) {
+            throw new ApiException(MeetupErrorCode.INVALID_TITLE);
         }
 
-        if (request.capacity() == null || request.capacity() < 1) {
-            throw new ApiException(
-                    MeetupErrorCode.INVALID_CAPACITY
-            );
+        if (title.length() > 200) {
+            throw new ApiException(MeetupErrorCode.INVALID_TITLE_LENGTH);
         }
 
-        if (request.place() == null
-                || request.place().isBlank()) {
-            throw new ApiException(
-                    MeetupErrorCode.INVALID_PLACE
-            );
+        if (request.capacity() == null
+                || request.capacity() < 1
+                || request.capacity() > 99999) {
+            throw new ApiException(MeetupErrorCode.INVALID_CAPACITY);
+        }
+
+        if (place == null || place.isEmpty()) {
+            throw new ApiException(MeetupErrorCode.INVALID_PLACE);
+        }
+
+        if (place.length() > 255) {
+            throw new ApiException(MeetupErrorCode.INVALID_PLACE_LENGTH);
+        }
+
+        if (imageUrl != null && imageUrl.length() > 500) {
+            throw new ApiException(MeetupErrorCode.INVALID_IMAGE_URL_LENGTH);
         }
 
         if (request.category() == null) {
-            throw new ApiException(
-                    MeetupErrorCode.INVALID_CATEGORY
-            );
+            throw new ApiException(MeetupErrorCode.INVALID_CATEGORY);
         }
 
-        if (request.startsAt() == null || !request.startsAt().isAfter(LocalDateTime.now())) {
-            throw new ApiException(
-                    MeetupErrorCode.INVALID_STARTS_AT
-            );
+        if (request.startsAt() == null
+                || !request.startsAt().isAfter(LocalDateTime.now())) {
+            throw new ApiException(MeetupErrorCode.INVALID_STARTS_AT);
         }
+    }
+
+    private String trim(String value) {
+        return value == null ? null : value.trim();
     }
 }

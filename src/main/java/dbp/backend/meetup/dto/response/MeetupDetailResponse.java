@@ -39,7 +39,7 @@ public record MeetupDetailResponse(
 
         @Schema(
                 description = "모임 이미지 URL",
-                example = "/images/meetups/example.jpg"
+                example = "https://example.com/images/meetups/example.jpg"
         )
         String imageUrl,
 

@@ -47,6 +47,8 @@ public class MeetupDao {
                 """;
         try (Connection conn = ConnectionManager.getConnection()){
             boolean autoCommit = conn.getAutoCommit();
+            boolean transactionCompleted = false;
+            Throwable transactionFailure = null;
 
             try{
                 conn.setAutoCommit(false);
@@ -88,12 +90,35 @@ public class MeetupDao {
                 }
 
                 conn.commit();
+                transactionCompleted = true;
                 return savedMeetup;
-            }catch (SQLException e){
-                JDBCUtil.rollbackQuietly(conn);
-                throw new DatabaseException(e);
+            }catch (SQLException | RuntimeException e){
+                transactionFailure = e;
+
+                try {
+                    conn.rollback();
+                    transactionCompleted = true;
+                } catch (SQLException rollbackException) {
+                    e.addSuppressed(rollbackException);
+                }
+
+                if (e instanceof SQLException sqlException) {
+                    throw new DatabaseException(sqlException);
+                }
+
+                throw (RuntimeException) e;
             }finally {
-                conn.setAutoCommit(autoCommit);
+                if (transactionCompleted) {
+                    try {
+                        conn.setAutoCommit(autoCommit);
+                    } catch (SQLException restoreException) {
+                        if (transactionFailure != null) {
+                            transactionFailure.addSuppressed(restoreException);
+                        } else {
+                            throw restoreException;
+                        }
+                    }
+                }
             }
 
         }catch (SQLException e){
