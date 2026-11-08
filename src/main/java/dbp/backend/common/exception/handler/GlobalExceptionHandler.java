@@ -5,6 +5,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.exception.code.ErrorCode;
 import dbp.backend.common.response.ApiError;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -28,6 +29,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(CommonErrorCode.DATABASE_ERROR.getStatusCode())
                 .body(new ApiError(CommonErrorCode.DATABASE_ERROR));
+    }
+
+    // 잘못된 JSON 형식이나 enum 값 등을 받아 처리
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException e
+    ) {
+        return ResponseEntity
+                .status(CommonErrorCode.BAD_REQUEST.getStatusCode())
+                .body(new ApiError(CommonErrorCode.BAD_REQUEST));
     }
 
     // 기타 Exception들을 처리
