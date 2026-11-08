@@ -8,13 +8,25 @@ public enum MeetupErrorCode implements ErrorCode {
             HttpServletResponse.SC_BAD_REQUEST,
             "모임 제목은 필수입니다."
     ),
+    INVALID_TITLE_LENGTH(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 제목은 200자 이하여야 합니다."
+    ),
     INVALID_CAPACITY(
             HttpServletResponse.SC_BAD_REQUEST,
-            "모임 정원은 1명 이상이어야 합니다."
+            "모임 정원은 1명 이상 99999명 이하여야 합니다."
     ),
     INVALID_PLACE(
             HttpServletResponse.SC_BAD_REQUEST,
             "모임 장소는 필수입니다."
+    ),
+    INVALID_PLACE_LENGTH(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 장소는 255자 이하여야 합니다."
+    ),
+    INVALID_IMAGE_URL_LENGTH(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "모임 이미지 URL은 500자 이하여야 합니다."
     ),
     INVALID_CATEGORY(
             HttpServletResponse.SC_BAD_REQUEST,

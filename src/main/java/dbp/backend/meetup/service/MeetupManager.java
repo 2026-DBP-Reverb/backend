@@ -23,16 +23,20 @@ public class MeetupManager {
         Long hostMemberId,
         MeetupCreateRequest request
     ){
-        validateCreateRequest(request);
+        String title = trim(request.title());
+        String place = trim(request.place());
+        String imageUrl = trim(request.imageUrl());
+
+        validateCreateRequest(request, title, place, imageUrl);
 
         Meetup meetup = new Meetup(
                 null,
                 hostMemberId,
-                request.title().trim(),
+                title,
                 request.description(),
-                request.imageUrl(),
+                imageUrl,
                 request.category(),
-                request.place().trim(),
+                place,
                 request.capacity(),
                 request.startsAt(),
                 null,
@@ -45,17 +49,36 @@ public class MeetupManager {
         return MeetupResponse.from(savedMeetup);
     }
 
-    private void validateCreateRequest(MeetupCreateRequest request){
-        if (request.title() == null || request.title().isBlank()) {
+    private void validateCreateRequest(
+            MeetupCreateRequest request,
+            String title,
+            String place,
+            String imageUrl
+    ){
+        if (title == null || title.isEmpty()) {
             throw new ApiException(MeetupErrorCode.INVALID_TITLE);
         }
 
-        if (request.capacity() == null || request.capacity() < 1) {
+        if (title.length() > 200) {
+            throw new ApiException(MeetupErrorCode.INVALID_TITLE_LENGTH);
+        }
+
+        if (request.capacity() == null
+                || request.capacity() < 1
+                || request.capacity() > 99999) {
             throw new ApiException(MeetupErrorCode.INVALID_CAPACITY);
         }
 
-        if (request.place() == null || request.place().isBlank()) {
+        if (place == null || place.isEmpty()) {
             throw new ApiException(MeetupErrorCode.INVALID_PLACE);
+        }
+
+        if (place.length() > 255) {
+            throw new ApiException(MeetupErrorCode.INVALID_PLACE_LENGTH);
+        }
+
+        if (imageUrl != null && imageUrl.length() > 500) {
+            throw new ApiException(MeetupErrorCode.INVALID_IMAGE_URL_LENGTH);
         }
 
         if (request.category() == null) {
@@ -66,5 +89,9 @@ public class MeetupManager {
                 || !request.startsAt().isAfter(LocalDateTime.now())) {
             throw new ApiException(MeetupErrorCode.INVALID_STARTS_AT);
         }
+    }
+
+    private String trim(String value) {
+        return value == null ? null : value.trim();
     }
 }
