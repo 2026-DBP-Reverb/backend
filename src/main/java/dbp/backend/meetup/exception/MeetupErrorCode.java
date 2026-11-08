@@ -27,6 +27,18 @@ public enum MeetupErrorCode implements ErrorCode {
     MEETUP_NOT_FOUND(
             HttpServletResponse.SC_NOT_FOUND,
             "모임을 찾을 수 없습니다."
+    ),
+    NOT_MEETUP_HOST(
+            HttpServletResponse.SC_FORBIDDEN,
+            "모임장만 모임을 수정하거나 삭제할 수 있습니다."
+    ),
+    COMPLETED_MEETUP_CANNOT_BE_CHANGED(
+            HttpServletResponse.SC_CONFLICT,
+            "완료된 모임은 수정하거나 삭제할 수 없습니다."
+    ),
+    CAPACITY_BELOW_PARTICIPANT_COUNT(
+            HttpServletResponse.SC_CONFLICT,
+            "모임 정원은 현재 참여 인원보다 적게 설정할 수 없습니다."
     );
     private final int statusCode;
     private final String detail;
