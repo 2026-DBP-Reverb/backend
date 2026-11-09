@@ -235,4 +235,111 @@ public class MeetupDao {
             throw new DatabaseException(e);
         }
     }
+
+    //현재 ACTIVE 상태인 참여 인원 조회
+    public int countActiveParticipants(Long meetupId){
+        String sql = """
+                SELECT count(*)
+                FROM meetup_participant mp
+                WHERE mp.meetup_id = ? AND mp.status = 'ACTIVE'
+                """;
+        try(Connection conn = ConnectionManager.getConnection()){
+            return JDBCUtil.executeQuery(
+                    conn,
+                    sql,
+                    rs -> {
+                        rs.next();
+                        return rs.getInt(1);
+                    },
+                    meetupId
+            );
+
+        }catch (SQLException e){
+            throw new DatabaseException(e);
+        }
+    }
+
+    //모임 정보 수정
+    public boolean update(Meetup meetup){
+        String sql = """
+                UPDATE meetup
+                SET title = ?, description = ?, image_url = ?, category = ?, place = ?, capacity = ?, starts_at = ?
+                WHERE meetup_id = ? AND host_member_id = ? AND status NOT IN ('CANCELLED', 'COMPLETED')
+                """;
+        try(Connection conn = ConnectionManager.getConnection()){
+            int updated = JDBCUtil.executeUpdate(
+                            conn,
+                            sql,
+                            meetup.getTitle(),
+                            meetup.getDescription(),
+                            meetup.getImageUrl(),
+                            meetup.getCategory().name(),
+                            meetup.getPlace(),
+                            meetup.getCapacity(),
+                            Timestamp.valueOf(meetup.getStartsAt()),
+                            meetup.getMeetupId(),
+                            meetup.getHostMemberId()
+            );
+            return  updated == 1;
+        }catch (SQLException e){
+            throw  new DatabaseException(e);
+        }
+    }
+
+    // 모임 삭제 처리
+    public boolean delete(
+            Long meetupId,
+            Long hostMemberId
+    ){
+        String participantDeleteSql = """
+            DELETE FROM meetup_participant
+            WHERE meetup_id = ?
+            """;
+
+        String meetupDeleteSql = """
+            DELETE FROM meetup
+            WHERE meetup_id = ?
+              AND host_member_id = ?
+              AND status != 'COMPLETED'
+            """;
+
+        try (Connection conn = ConnectionManager.getConnection()) {
+            boolean autoCommit = conn.getAutoCommit();
+
+            try {
+                conn.setAutoCommit(false);
+
+                JDBCUtil.executeUpdate(
+                        conn,
+                        participantDeleteSql,
+                        meetupId
+                );
+
+                int deleted = JDBCUtil.executeUpdate(
+                        conn,
+                        meetupDeleteSql,
+                        meetupId,
+                        hostMemberId
+                );
+
+                if (deleted != 1) {
+                    JDBCUtil.rollbackQuietly(conn);
+                    return false;
+                }
+
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                JDBCUtil.rollbackQuietly(conn);
+                throw new DatabaseException(e);
+
+            } finally {
+                conn.setAutoCommit(autoCommit);
+            }
+
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
 }

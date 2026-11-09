@@ -6,6 +6,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.request.MeetupUpdateRequest;
 import dbp.backend.meetup.dto.response.MeetupDetailResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.service.MeetupManager;
@@ -70,4 +71,42 @@ public class MeetupController {
 
         return memberId;
     }
+
+    @Operation(summary = "모임 정보 수정")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @PutMapping("/{meetupId}")
+    public ResponseEntity<ResponseBody<MeetupResponse>> updateMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            @RequestBody MeetupUpdateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        MeetupResponse response = meetupManager.updateMeetup(
+                meetupId,
+                loginMemberId,
+                request
+        );
+
+        return ResponseEntity.ok(new ResponseBody<>(response));
+    }
+
+    @Operation(summary = "모임 삭제")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @DeleteMapping("/{meetupId}")
+    public ResponseEntity<ResponseBody<Void>> deleteMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        meetupManager.deleteMeetup(meetupId, loginMemberId);
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
+
 }
