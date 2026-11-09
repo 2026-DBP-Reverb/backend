@@ -37,14 +37,6 @@ public class MemberDao {
         }
     }
 
-    public void save(String email, String passwordHash, String nickname) {
-        try (Connection conn = ConnectionManager.getConnection()) {
-            save(conn, email, passwordHash, nickname);
-        } catch (SQLException e) {
-            throw new DatabaseException(e);
-        }
-    }
-
     public void save(
             Connection conn,
             String email,
