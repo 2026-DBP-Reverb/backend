@@ -22,6 +22,13 @@ public record MemberSignupRequest(
                 example = "password123",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
-        String passwordConfirm
+        String passwordConfirm,
+
+        @Schema(
+                description = "인증코드",
+                example = "012345",
+                requiredMode = Schema.RequiredMode.REQUIRED
+        )
+        String verificationCode
 ) {
 }

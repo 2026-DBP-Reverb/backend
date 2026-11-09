@@ -27,12 +27,25 @@ public enum MemberErrorCode implements ErrorCode {
     MEMBER_NOT_FOUND(
             HttpServletResponse.SC_NOT_FOUND,
             "회원을 찾을 수 없습니다."
-    );
+    ),
+    EMAIL_HMAC_KEY_INVALID(
+            HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            "이메일 인증코드 검증 키의 형식이 유효하지 않습니다."
+    ),
+    EMAIL_VERIFICATION_DELIVERY_FAILED(
+            HttpServletResponse.SC_SERVICE_UNAVAILABLE,
+            "인증 메일을 발송하지 못했습니다. 잠시 후 다시 시도해 주세요."
+    ),
+    INVALID_EMAIL_VERIFICATION_CODE(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "인증 코드가 올바르지 않거나 만료되었습니다."
+    ),
+    ;
 
     private final int statusCode;
     private final String detail;
 
-    MemberErrorCode(int statusCode, String detail){
+    MemberErrorCode(int statusCode, String detail) {
         this.statusCode = statusCode;
         this.detail = detail;
     }
