@@ -103,9 +103,8 @@ public class MateRecommendationManager {
         if(target == null)
             throw new ApiException(MateErrorCode.MATE_NOT_FOUND);
 
-        String instagramId = null;
-        if(mateRecommendationDao.isMatched(memberId, targetMemberId))
-            instagramId = target.getInstagramId();
+        boolean matched = mateRecommendationDao.isMatched(memberId, targetMemberId);
+        String instagramId = matched ? target.getInstagramId() : null;
 
         List<TrackResponse> tracks = musicTasteDao.getTrackTastes(targetMemberId)
                 .stream().map(TrackResponse::from).toList();
@@ -129,6 +128,7 @@ public class MateRecommendationManager {
                 target.getNickname(),
                 IMAGE_SERVER_URI + target.getProfileImageUrl(),
                 instagramId,
+                matched,
                 artists,
                 genres,
                 tracks,

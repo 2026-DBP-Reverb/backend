@@ -33,6 +33,10 @@ public record MateProfileResponse(
         )
         String instagramId,
 
+        @Schema(description = "매칭 여부 (true면 이미 메이트)",
+                example = "false")
+        boolean matched,
+
         @Schema(
                 description = "최애 아티스트 목록"
         )
