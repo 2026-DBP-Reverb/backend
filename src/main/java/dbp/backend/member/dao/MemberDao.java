@@ -38,6 +38,19 @@ public class MemberDao {
     }
 
     public void save(String email, String passwordHash, String nickname) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            save(conn, email, passwordHash, nickname);
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public void save(
+            Connection conn,
+            String email,
+            String passwordHash,
+            String nickname
+    ) throws SQLException {
         String sql = """
                 INSERT INTO MEMBER (
                     MEMBER_ID,
@@ -54,20 +67,18 @@ public class MemberDao {
                 )
                 """;
 
+        JDBCUtil.executeUpdate(conn, sql, email, passwordHash, nickname);
+    }
+
+    public Member findByEmail(String email) {
         try (Connection conn = ConnectionManager.getConnection()) {
-            JDBCUtil.executeUpdate(
-                    conn,
-                    sql,
-                    email,
-                    passwordHash,
-                    nickname
-            );
+            return findByEmail(conn, email);
         } catch (SQLException e) {
             throw new DatabaseException(e);
         }
     }
 
-    public Member findByEmail(String email) {
+    public Member findByEmail(Connection conn, String email) throws SQLException {
         String sql = """
                 SELECT
                     MEMBER_ID,
@@ -81,16 +92,7 @@ public class MemberDao {
                 WHERE EMAIL = ?
                 """;
 
-        try (Connection conn = ConnectionManager.getConnection()) {
-            return JDBCUtil.executeQuery(
-                    conn,
-                    sql,
-                    this::mapSingleMember,
-                    email
-            );
-        } catch (SQLException e) {
-            throw new DatabaseException(e);
-        }
+        return JDBCUtil.executeQuery(conn, sql, this::mapSingleMember, email);
     }
 
     public Member findById(Long memberId) {
