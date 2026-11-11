@@ -6,6 +6,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.request.MeetupParticipantStatusUpdateRequest;
 import dbp.backend.meetup.dto.request.MeetupUpdateRequest;
 import dbp.backend.meetup.dto.response.MeetupDetailResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
@@ -121,6 +122,24 @@ public class MeetupController {
         Long loginMemberId = getMemberId(httpRequest);
 
         meetupManager.joinMeetup(meetupId, loginMemberId);
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
+
+
+    @Operation(summary = "모임 탈퇴")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @PatchMapping("/{meetupId}/participants")
+    public ResponseEntity<ResponseBody<Void>> leaveMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            @RequestBody MeetupParticipantStatusUpdateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        meetupManager.leaveMeetup(meetupId, loginMemberId, request);
 
         return ResponseEntity.ok(new ResponseBody<>(null));
     }

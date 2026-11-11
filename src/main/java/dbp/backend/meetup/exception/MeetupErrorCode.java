@@ -63,7 +63,20 @@ public enum MeetupErrorCode implements ErrorCode {
     MEETUP_NOT_OPEN(
             HttpServletResponse.SC_CONFLICT,
             "현재 참여할 수 없는 모임입니다."
+    ),
+    HOST_CANNOT_LEAVE_MEETUP(
+            HttpServletResponse.SC_CONFLICT,
+            "모임장은 모임을 탈퇴할 수 없습니다."
+    ),
+    MEETUP_LEAVE_NOT_ALLOWED(
+            HttpServletResponse.SC_CONFLICT,
+            "현재 탈퇴할 수 없는 모임입니다."
+    ),
+    NOT_MEETUP_PARTICIPANT(
+            HttpServletResponse.SC_CONFLICT,
+            "현재 참여 중인 모임이 아닙니다."
     );
+
     private final int statusCode;
     private final String detail;
 
