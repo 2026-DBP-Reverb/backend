@@ -88,6 +88,18 @@ public class MemberDao {
     }
 
     public Member findById(Long memberId) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            return findById(conn, memberId, false);
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    public Member findByIdForUpdate(Connection conn, Long memberId) throws SQLException {
+        return findById(conn, memberId, true);
+    }
+
+    private Member findById(Connection conn, Long memberId, boolean forUpdate) throws SQLException {
         String sql = """
                 SELECT
                     MEMBER_ID,
@@ -100,17 +112,23 @@ public class MemberDao {
                 FROM MEMBER
                 WHERE MEMBER_ID = ?
                 """;
-
-        try (Connection conn = ConnectionManager.getConnection()) {
-            return JDBCUtil.executeQuery(
-                    conn,
-                    sql,
-                    this::mapSingleMember,
-                    memberId
-            );
-        } catch (SQLException e) {
-            throw new DatabaseException(e);
+        if (forUpdate) {
+            sql += "FOR UPDATE";
         }
+        return JDBCUtil.executeQuery(conn, sql, this::mapSingleMember, memberId);
+    }
+
+    public void updateProfile(Connection conn, Member member) throws SQLException {
+        String sql = """
+                UPDATE MEMBER
+                SET PROFILE_IMAGE_URL = ?, INSTAGRAM_ID = ?, NICKNAME = ?
+                WHERE MEMBER_ID = ?
+                """;
+        JDBCUtil.executeUpdate(
+                conn,
+                sql,
+                member.getProfileImageUrl(), member.getInstagramId(), member.getNickname(), member.getMemberId()
+        );
     }
 
     private Member mapSingleMember(ResultSet rs)

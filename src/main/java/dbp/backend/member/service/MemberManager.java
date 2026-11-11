@@ -9,6 +9,7 @@ import dbp.backend.member.dao.MemberDao;
 import dbp.backend.member.dto.MemberLoginRequest;
 import dbp.backend.member.dto.MemberResponse;
 import dbp.backend.member.dto.MemberSignupRequest;
+import dbp.backend.member.dto.ProfileUpdateRequest;
 import dbp.backend.member.exception.MemberErrorCode;
 import dbp.backend.member.model.Member;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -124,6 +125,39 @@ public class MemberManager {
         }
 
         return MemberResponse.from(member);
+    }
+
+    public MemberResponse updateProfile(Long memberId, ProfileUpdateRequest request) {
+        try (Connection conn = ConnectionManager.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                Member member = memberDao.findByIdForUpdate(conn, memberId);
+                if (member == null) {
+                    throw new ApiException(MemberErrorCode.MEMBER_NOT_FOUND);
+                }
+
+                String imageUrl = request.profileImageUrl() == null ? member.getProfileImageUrl() : request.profileImageUrl();
+                String nickname = request.nickname() == null ? member.getNickname() : request.nickname();
+                String instagramId = member.getInstagramId();
+
+                if (request.instagramId() != null) {
+                    instagramId = request.instagramId().isEmpty() ? null : request.instagramId();
+                }
+
+                member.updateProfile(imageUrl, instagramId, nickname);
+                memberDao.updateProfile(conn, member);
+                
+                MemberResponse response = MemberResponse.from(member);
+                conn.commit();
+                return response;
+
+            } catch (SQLException | RuntimeException e) {
+                JDBCUtil.rollbackQuietly(conn);
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
     }
 
     private String validateSignupRequest(

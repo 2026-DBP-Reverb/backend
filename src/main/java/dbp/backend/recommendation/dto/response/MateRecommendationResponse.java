@@ -1,5 +1,6 @@
 package dbp.backend.recommendation.dto.response;
 
+import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.recommendation.model.MateCandidate;
 import dbp.backend.recommendation.model.RequestStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -47,8 +48,6 @@ public record MateRecommendationResponse(
         example = "NONE")
         RequestStatus requestStatus
 ) {
-    private static final String IMAGE_SERVER_URI = "http://localhost:8080";
-
     public static MateRecommendationResponse of(
             MateCandidate mateCandidate,
             List<String> commonArtists,
@@ -59,7 +58,7 @@ public record MateRecommendationResponse(
         return new MateRecommendationResponse(
                 mateCandidate.getMemberId(),
                 mateCandidate.getNickname(),
-                IMAGE_SERVER_URI + mateCandidate.getProfileImageUrl(),
+                ProfileImageUrls.resolve(mateCandidate.getProfileImageUrl()),
                 mateCandidate.getMatchRate(),
                 commonArtists,
                 commonGenres,
