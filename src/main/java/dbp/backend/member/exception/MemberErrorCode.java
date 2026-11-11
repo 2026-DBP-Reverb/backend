@@ -40,6 +40,18 @@ public enum MemberErrorCode implements ErrorCode {
             HttpServletResponse.SC_BAD_REQUEST,
             "인증 코드가 올바르지 않거나 만료되었습니다."
     ),
+    INVALID_NICKNAME(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "닉네임은 비어 있을 수 없으며 100바이트 이하여야 합니다."
+    ),
+    INVALID_INSTAGRAM_ID(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "인스타그램 아이디는 영문, 숫자, 밑줄, 마침표로 이루어진 30자 이하여야 합니다."
+    ),
+    INVALID_PROFILE_IMAGE_URL(
+            HttpServletResponse.SC_BAD_REQUEST,
+            "프로필 사진 URL은 500바이트 이하의 전체 HTTP 또는 HTTPS 주소여야 합니다."
+    ),
     ;
 
     private final int statusCode;
