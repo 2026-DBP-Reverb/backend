@@ -362,7 +362,7 @@ public class MeetupDao {
                         SELECT COUNT(*)
                         FROM meetup_participant mp
                         WHERE mp.meetup_id = m.meetup_id
-                            AND mp. status = 'ACTIVE'
+                            AND mp.status = 'ACTIVE'
                     ) AS participant_count,
                     CASE
                         WHEN EXISTS (
@@ -375,7 +375,7 @@ public class MeetupDao {
                         THEN 1
                         ELSE 0
                     END AS joined
-                FROM meeup m
+                FROM meetup m
                 WHERE m.status IN ('OPEN', 'CLOSED')
                 ORDER BY m.starts_at ASC, m.meetup_id DESC
                 """;
