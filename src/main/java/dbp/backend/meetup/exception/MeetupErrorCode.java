@@ -51,6 +51,18 @@ public enum MeetupErrorCode implements ErrorCode {
     CAPACITY_BELOW_PARTICIPANT_COUNT(
             HttpServletResponse.SC_CONFLICT,
             "모임 정원은 현재 참여 인원보다 적게 설정할 수 없습니다."
+    ),
+    ALREADY_JOINED(
+            HttpServletResponse.SC_CONFLICT,
+            "이미 참여 중인 모임입니다."
+    ),
+    MEETUP_CAPACITY_FULL(
+            HttpServletResponse.SC_CONFLICT,
+            "모임 정원이 가득 찼습니다."
+    ),
+    MEETUP_NOT_OPEN(
+            HttpServletResponse.SC_CONFLICT,
+            "현재 참여할 수 없는 모임입니다."
     );
     private final int statusCode;
     private final String detail;

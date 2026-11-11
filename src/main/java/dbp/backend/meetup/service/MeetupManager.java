@@ -8,6 +8,7 @@ import dbp.backend.meetup.dto.response.MeetupDetailResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.meetup.model.Meetup;
+import dbp.backend.meetup.model.MeetupJoinResult;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
 import org.springframework.stereotype.Service;
@@ -134,6 +135,30 @@ public class MeetupManager {
             throw new ApiException(
                     MeetupErrorCode.MEETUP_NOT_FOUND
             );
+        }
+    }
+
+    // 모임 참여
+    public void joinMeetup(
+            Long meetupId,
+            Long loginMemberId
+    ){
+        MeetupJoinResult result = meetupDao.join(meetupId,loginMemberId);
+
+        switch (result) {
+            case SUCCESS -> {
+            }
+            case MEETUP_NOT_FOUND -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+            case MEETUP_NOT_OPEN -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_NOT_OPEN
+            );
+            case ALREADY_JOINED -> throw new ApiException(
+                    MeetupErrorCode.ALREADY_JOINED
+            );
+            case CAPACITY_FULL -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_CAPACITY_FULL);
         }
     }
 

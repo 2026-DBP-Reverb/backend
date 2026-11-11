@@ -109,4 +109,19 @@ public class MeetupController {
         return ResponseEntity.ok(new ResponseBody<>(null));
     }
 
+    @Operation(summary = "모임 참여")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @PostMapping("/{meetupId}/participants")
+    public ResponseEntity<ResponseBody<Void>> joinMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        meetupManager.joinMeetup(meetupId, loginMemberId);
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
 }
