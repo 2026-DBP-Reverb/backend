@@ -5,11 +5,7 @@ import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
-import dbp.backend.member.dto.EmailVerificationConfirmRequest;
-import dbp.backend.member.dto.EmailVerificationRequest;
-import dbp.backend.member.dto.MemberLoginRequest;
-import dbp.backend.member.dto.MemberResponse;
-import dbp.backend.member.dto.MemberSignupRequest;
+import dbp.backend.member.dto.*;
 import dbp.backend.member.service.EmailSendManager;
 import dbp.backend.member.service.EmailVerifyManager;
 import dbp.backend.member.service.MemberManager;
@@ -17,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -122,6 +119,22 @@ public class MemberController {
         MemberResponse member =
                 memberManager.findById(memberId);
 
+        return ResponseEntity.ok(new ResponseBody<>(member));
+    }
+
+    @Operation(summary = "내 프로필 수정")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    @PutMapping(value = "/me", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<ResponseBody<MemberResponse>> updateProfile(
+            @RequestBody ProfileUpdateRequest update,
+            HttpServletRequest request
+    ) {
+        Long memberId = SessionUtil.getLoginMemberId(request);
+        if (memberId == null) {
+            throw new ApiException(CommonErrorCode.UNAUTHORIZED);
+        }
+
+        MemberResponse member = memberManager.updateProfile(memberId, update.validated());
         return ResponseEntity.ok(new ResponseBody<>(member));
     }
 }
