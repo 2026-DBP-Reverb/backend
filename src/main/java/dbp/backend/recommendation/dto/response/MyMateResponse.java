@@ -1,5 +1,6 @@
 package dbp.backend.recommendation.dto.response;
 
+import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.recommendation.model.MyMate;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -42,15 +43,13 @@ public record MyMateResponse(
         String instagramId
 
 ) {
-    private static final String IMAGE_SERVER_URI = "http://localhost:8080";
-
     public static MyMateResponse from(MyMate myMate) {
         return new MyMateResponse(
                 myMate.status(),
                 myMate.requestId(),
                 myMate.memberId(),
                 myMate.nickname(),
-                IMAGE_SERVER_URI + myMate.profileImageUrl(), myMate.instagramId()
+                ProfileImageUrls.resolve(myMate.profileImageUrl()), myMate.instagramId()
         );
     }
 }

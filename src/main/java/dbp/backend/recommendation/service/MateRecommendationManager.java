@@ -1,5 +1,6 @@
 package dbp.backend.recommendation.service;
 
+import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.member.dao.MemberDao;
@@ -28,8 +29,6 @@ public class MateRecommendationManager {
     private final MemberDao memberDao;
     private static final int RECOMMENDATION_LIMIT = 10;
     private final MusicTasteDao musicTasteDao;
-    private static final String IMAGE_SERVER_URI = "http://localhost:8080";
-
     public MateRecommendationManager(
             MateRecommendationDao mateRecommendationDao,
             MemberDao memberDao, MusicTasteDao musicTasteDao
@@ -127,7 +126,7 @@ public class MateRecommendationManager {
         return new MateProfileResponse(
                 target.getMemberId(),
                 target.getNickname(),
-                IMAGE_SERVER_URI + target.getProfileImageUrl(),
+                ProfileImageUrls.resolve(target.getProfileImageUrl()),
                 instagramId,
                 artists,
                 genres,
