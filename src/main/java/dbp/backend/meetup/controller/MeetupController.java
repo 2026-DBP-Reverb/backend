@@ -164,4 +164,20 @@ public class MeetupController {
 
         return ResponseEntity.ok(new ResponseBody<>(null));
     }
+
+    @Operation(summary = "내가 개설한 모임 목록 조회")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @GetMapping("/hosted")
+    public ResponseEntity<ResponseBody<List<MeetupListResponse>>>
+    getHostedMeetups(
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        List<MeetupListResponse> response = meetupManager.getHostedMeetups(loginMemberId);
+
+        return ResponseEntity.ok(new ResponseBody<>(response));
+    }
 }
