@@ -5,6 +5,8 @@ import dbp.backend.meetup.model.MeetupStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Schema(description = "모임 목록 항목")
 public record MeetupListResponse(
@@ -65,6 +67,11 @@ public record MeetupListResponse(
         )
         boolean joined
 ) {
+    private static final Pattern SEOUL_DISTRICT_PATTERN =
+            Pattern.compile(
+                    "^서울(?:특별)?시\\s*([가-힣]{1,4}구)"
+            );
+
     public MeetupListResponse {
         place = toRegion(place);
     }
@@ -74,13 +81,14 @@ public record MeetupListResponse(
             return place;
         }
 
-        String[] addressParts = place.trim().split("\\s+");
+        String trimmedPlace = place.trim();
+        Matcher matcher =
+                SEOUL_DISTRICT_PATTERN.matcher(trimmedPlace);
 
-        if (addressParts[0].equals("서울특별시")
-                && addressParts.length > 1) {
-            return addressParts[1];
+        if (matcher.find()) {
+            return matcher.group(1);
         }
 
-        return addressParts[0];
+        return trimmedPlace.split("\\s+")[0];
     }
 }
