@@ -2,7 +2,6 @@ package dbp.backend.meetup.dto.response;
 
 import dbp.backend.meetup.model.MeetupCategory;
 import dbp.backend.meetup.model.MeetupStatus;
-import dbp.backend.meetup.model.MeetupSummary;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -66,20 +65,4 @@ public record MeetupListResponse(
         )
         boolean joined
 ) {
-        public static MeetupListResponse from(
-                MeetupSummary summary
-        ) {
-                return new MeetupListResponse(
-                        summary.meetupId(),
-                        summary.title(),
-                        summary.imageUrl(),
-                        summary.place(),
-                        summary.category(),
-                        summary.participantCount(),
-                        summary.capacity(),
-                        summary.startsAt(),
-                        summary.status(),
-                        summary.joined()
-                );
-        }
 }

@@ -7,7 +7,7 @@ import dbp.backend.meetup.model.Meetup;
 import dbp.backend.meetup.model.MeetupCategory;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
-import dbp.backend.meetup.model.MeetupSummary;
+import dbp.backend.meetup.dto.response.MeetupListResponse;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -345,7 +345,7 @@ public class MeetupDao {
     }
 
     //모임 목록 카드
-    public List<MeetupSummary> findAll(
+    public List<MeetupListResponse> findAll(
             Long loginMemberId
     ){
         String sql = """
@@ -386,12 +386,12 @@ public class MeetupDao {
                     conn,
                     sql,
                     rs -> {
-                        List<MeetupSummary> meetups =
+                        List<MeetupListResponse> meetups =
                                 new ArrayList<>();
 
                         while(rs.next()) {
                             meetups.add(
-                                    new MeetupSummary(
+                                    new MeetupListResponse(
                                             rs.getLong("meetup_id"),
                                             rs.getString("title"),
                                             rs.getString("image_url"),

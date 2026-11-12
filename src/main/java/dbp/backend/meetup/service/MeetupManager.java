@@ -11,12 +11,10 @@ import dbp.backend.meetup.model.Meetup;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
 import dbp.backend.meetup.dto.response.MeetupListResponse;
-import dbp.backend.meetup.model.MeetupSummary;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.ArrayList;
 
 @Service
 public class MeetupManager {
@@ -268,18 +266,7 @@ public class MeetupManager {
     public List<MeetupListResponse> getMeetups(
             Long loginMemberId
     ){
-        List<MeetupSummary> summaries =
-                meetupDao.findAll(loginMemberId);
-
-        List<MeetupListResponse> response =
-                new ArrayList<>();
-
-        for (MeetupSummary summary : summaries){
-            response.add(
-                    MeetupListResponse.from(summary)
-            );
-        }
-        return response;
+        return meetupDao.findAll(loginMemberId);
     }
 
 }
