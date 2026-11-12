@@ -411,24 +411,40 @@ public class MeetupDao {
     public boolean delete(
             Long meetupId,
             Long hostMemberId
-    ){
+    ) {
         String participantDeleteSql = """
-            DELETE FROM meetup_participant
-            WHERE meetup_id = ?
-            """;
+                DELETE FROM meetup_participant
+                WHERE meetup_id = ?
+                """;
 
         String meetupDeleteSql = """
-            DELETE FROM meetup
-            WHERE meetup_id = ?
-              AND host_member_id = ?
-              AND status != 'COMPLETED'
-            """;
+                DELETE FROM meetup
+                WHERE meetup_id = ?
+                  AND host_member_id = ?
+                  AND status NOT IN ('CANCELLED', 'COMPLETED')
+                """;
 
         try (Connection conn = ConnectionManager.getConnection()) {
             boolean autoCommit = conn.getAutoCommit();
+            boolean transactionCompleted = false;
+            Throwable transactionFailure = null;
 
             try {
                 conn.setAutoCommit(false);
+
+                Meetup meetup = findByIdForUpdate(
+                        conn,
+                        meetupId
+                );
+
+                if (meetup == null
+                        || !meetup.getHostMemberId().equals(hostMemberId)
+                        || meetup.getStatus() == MeetupStatus.CANCELLED
+                        || meetup.getStatus() == MeetupStatus.COMPLETED) {
+                    conn.rollback();
+                    transactionCompleted = true;
+                    return false;
+                }
 
                 JDBCUtil.executeUpdate(
                         conn,
@@ -444,19 +460,45 @@ public class MeetupDao {
                 );
 
                 if (deleted != 1) {
-                    JDBCUtil.rollbackQuietly(conn);
+                    conn.rollback();
+                    transactionCompleted = true;
                     return false;
                 }
 
                 conn.commit();
+                transactionCompleted = true;
                 return true;
 
-            } catch (SQLException e) {
-                JDBCUtil.rollbackQuietly(conn);
-                throw new DatabaseException(e);
+            } catch (SQLException | RuntimeException e) {
+                transactionFailure = e;
+
+                try {
+                    conn.rollback();
+                    transactionCompleted = true;
+                } catch (SQLException rollbackException) {
+                    e.addSuppressed(rollbackException);
+                }
+
+                if (e instanceof SQLException sqlException) {
+                    throw new DatabaseException(sqlException);
+                }
+
+                throw (RuntimeException) e;
 
             } finally {
-                conn.setAutoCommit(autoCommit);
+                if (transactionCompleted) {
+                    try {
+                        conn.setAutoCommit(autoCommit);
+                    } catch (SQLException restoreException) {
+                        if (transactionFailure != null) {
+                            transactionFailure.addSuppressed(
+                                    restoreException
+                            );
+                        } else {
+                            throw restoreException;
+                        }
+                    }
+                }
             }
 
         } catch (SQLException e) {
