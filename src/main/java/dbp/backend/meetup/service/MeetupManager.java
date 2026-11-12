@@ -7,6 +7,7 @@ import dbp.backend.meetup.dto.request.MeetupCreateRequest;
 import dbp.backend.meetup.dto.request.MeetupParticipantStatusUpdateRequest;
 import dbp.backend.meetup.dto.request.MeetupUpdateRequest;
 import dbp.backend.meetup.dto.response.MeetupDetailResponse;
+import dbp.backend.meetup.dto.response.MeetupListResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.meetup.model.Meetup;
@@ -320,4 +321,12 @@ public class MeetupManager {
     private String trim(String value) {
         return value == null ? null : value.trim();
     }
+
+    //모임 목록 기능
+    public List<MeetupListResponse> getMeetups(
+            Long loginMemberId
+    ){
+        return meetupDao.findAll(loginMemberId);
+    }
+
 }
