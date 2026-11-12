@@ -24,8 +24,8 @@ public record MeetupListResponse(
         String imageUrl,
 
         @Schema(
-                description = "모임 장소",
-                example = "부산광역시"
+                description = "목록용 지역명. 서울은 구, 그 외 지역은 시·도 단위",
+                example = "광진구"
         )
         String place,
 
@@ -65,4 +65,22 @@ public record MeetupListResponse(
         )
         boolean joined
 ) {
+    public MeetupListResponse {
+        place = toRegion(place);
+    }
+
+    private static String toRegion(String place) {
+        if (place == null || place.isBlank()) {
+            return place;
+        }
+
+        String[] addressParts = place.trim().split("\\s+");
+
+        if (addressParts[0].equals("서울특별시")
+                && addressParts.length > 1) {
+            return addressParts[1];
+        }
+
+        return addressParts[0];
+    }
 }
