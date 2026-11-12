@@ -10,6 +10,7 @@ import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.meetup.model.Meetup;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
+import dbp.backend.meetup.dto.response.MeetupListResponse;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -260,4 +261,12 @@ public class MeetupManager {
     private String trim(String value) {
         return value == null ? null : value.trim();
     }
+
+    //모임 목록 기능
+    public List<MeetupListResponse> getMeetups(
+            Long loginMemberId
+    ){
+        return meetupDao.findAll(loginMemberId);
+    }
+
 }

@@ -7,6 +7,7 @@ import dbp.backend.meetup.model.Meetup;
 import dbp.backend.meetup.model.MeetupCategory;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
+import dbp.backend.meetup.dto.response.MeetupListResponse;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -340,6 +341,76 @@ public class MeetupDao {
 
         } catch (SQLException e) {
             throw new DatabaseException(e);
+        }
+    }
+
+    //모임 목록 카드
+    public List<MeetupListResponse> findAll(
+            Long loginMemberId
+    ){
+        String sql = """
+                SELECT
+                    m.meetup_id,
+                    m.title,
+                    m.image_url,
+                    m.place,
+                    m.category,
+                    m.capacity,
+                    m.starts_at,
+                    m.status,
+                    (
+                        SELECT COUNT(*)
+                        FROM meetup_participant mp
+                        WHERE mp.meetup_id = m.meetup_id
+                            AND mp.status = 'ACTIVE'
+                    ) AS participant_count,
+                    CASE
+                        WHEN EXISTS (
+                            SELECT 1
+                            FROM meetup_participant mp
+                            WHERE mp.meetup_id = m.meetup_id
+                                AND mp.member_id = ?
+                                AND mp.status = 'ACTIVE'
+                        )
+                        THEN 1
+                        ELSE 0
+                    END AS joined
+                FROM meetup m
+                WHERE m.status IN ('OPEN', 'CLOSED')
+                ORDER BY m.starts_at ASC, m.meetup_id DESC
+                """;
+
+        try (Connection conn =
+                ConnectionManager.getConnection()){
+            return JDBCUtil.executeQuery(
+                    conn,
+                    sql,
+                    rs -> {
+                        List<MeetupListResponse> meetups =
+                                new ArrayList<>();
+
+                        while(rs.next()) {
+                            meetups.add(
+                                    new MeetupListResponse(
+                                            rs.getLong("meetup_id"),
+                                            rs.getString("title"),
+                                            rs.getString("image_url"),
+                                            rs.getString("place"),
+                                            MeetupCategory.valueOf(rs.getString("category")),
+                                            rs.getInt("participant_count"),
+                                            rs.getInt("capacity"),
+                                            rs.getTimestamp("starts_at").toLocalDateTime(),
+                                            MeetupStatus.valueOf(rs.getString("status")),
+                                            rs.getInt("joined") == 1
+                                    )
+                            );
+                        }
+                        return meetups;
+                    },
+                    loginMemberId
+            );
+        } catch(SQLException e){
+            throw  new DatabaseException(e);
         }
     }
 }
