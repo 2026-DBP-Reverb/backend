@@ -154,6 +154,8 @@ CREATE TABLE meetup (
 
 CREATE INDEX meetup_host_idx ON meetup (host_member_id);
 
+CREATE INDEX meetup_status_starts_at_idx ON meetup (status, starts_at);
+
 CREATE TABLE meetup_participant
 (
     meetup_id NUMBER NOT NULL,
