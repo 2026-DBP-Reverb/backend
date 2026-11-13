@@ -8,9 +8,7 @@ import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class SettlementManager {
@@ -21,25 +19,21 @@ public class SettlementManager {
         this.settlementRepository = settlementRepository;
     }
 
+    /**
+     * 새로운 정산 내역 생성
+     *
+     * @param memberId 정산 생성자 (즉 대표 결제자)
+     */
     public void createSettlement(Long memberId, CreateSettlementRequest request) {
         // 요청 검증
         request.validate();
-        Set<Long> meetupParticipantIds = new HashSet<>(
-                settlementRepository.findMeetupParticipantMemberIds(request.meetupId())
-        );
-        for (CreateSettlementRequest.SettlementParticipant participant : request.participants()) {
-            // 정산 참여자 중 해당 모임 회원이 아닌 사람이 있는 경우
-            if (!meetupParticipantIds.contains(participant.memberId())) {
-                throw new ApiException(SettlementErrorCode.NOT_MEETUP_PARTICIPANT);
-            }
-        }
-        if (!meetupParticipantIds.contains(memberId)) {  // 정산 등록자가 해당 모임 회원이 아닌 경우
-            throw new ApiException(SettlementErrorCode.NOT_MEETUP_PARTICIPANT);
-        }
         // 정산 insert
         settlementRepository.insertSettlement(memberId, request);
     }
 
+    /**
+     * 모임의 정산 내역을 간략한 응답 목록으로 반환
+     */
     public List<SettlementSummaryResponse> getSettlementsList(Long memberId, Long meetupId) {
         // 모임 id 검증
         if (meetupId == null || meetupId <= 0) {

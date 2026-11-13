@@ -12,6 +12,14 @@ public interface SettlementMapper {
     @Select("SELECT settlement_seq.nextval FROM dual")
     Long nextSettlementId();
 
+    @Select("""
+            SELECT meetup_id
+            FROM meetup
+            WHERE meetup_id = #{meetupId}
+            FOR UPDATE
+            """)
+    Long lockMeetupById(Long meetupId);
+
     @Insert("""
             INSERT INTO settlement (settlement_id, meetup_id, paid_by_member_id,
                                     title, total_amount, account, split_method, spent_at)
