@@ -121,7 +121,6 @@ CREATE TABLE meetup (
     place          VARCHAR2(255)   NOT NULL,
     capacity       NUMBER(5)       DEFAULT 10 NOT NULL,
     starts_at      DATE   NOT NULL,
-    ends_at        DATE,
     status         VARCHAR2(12)    DEFAULT 'OPEN' NOT NULL,
     created_at     TIMESTAMP WITH LOCAL TIME ZONE DEFAULT systimestamp NOT NULL,
 
@@ -150,16 +149,12 @@ CREATE TABLE meetup (
                        'COMPLETED',
                        'CANCELLED'
                 )
-            ),
-
-    CONSTRAINT meetup_time_ck
-        CHECK (
-            ends_at IS NULL
-                OR ends_at > starts_at
             )
 );
 
 CREATE INDEX meetup_host_idx ON meetup (host_member_id);
+
+CREATE INDEX meetup_status_starts_at_idx ON meetup (status, starts_at);
 
 CREATE TABLE meetup_participant
 (

@@ -50,7 +50,6 @@ public class MeetupManager {
                 place,
                 request.capacity(),
                 request.startsAt(),
-                null,
                 MeetupStatus.OPEN,
                 null
         );
@@ -100,7 +99,6 @@ public class MeetupManager {
                 place,
                 request.capacity(),
                 request.startsAt(),
-                meetup.getEndsAt(),
                 meetup.getStatus(),
                 meetup.getCreatedAt()
         );
@@ -225,7 +223,8 @@ public class MeetupManager {
             );
         }
 
-        if(meetup.getStatus() == MeetupStatus.COMPLETED){
+        if(meetup.getStatus() == MeetupStatus.COMPLETED
+                || !meetup.getStartsAt().isAfter(LocalDateTime.now())){
             throw new ApiException(
                     MeetupErrorCode.COMPLETED_MEETUP_CANNOT_BE_CHANGED
             );

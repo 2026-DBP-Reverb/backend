@@ -88,6 +88,8 @@ public class MeetupDao {
                         meetup.getHostMemberId()
                 );
 
+                refreshStatus(conn, meetupId);
+
                 Meetup savedMeetup = findById(conn,meetupId);
 
                 if (savedMeetup == null) {
@@ -153,7 +155,6 @@ public class MeetupDao {
                     place,
                     capacity,
                     starts_at,
-                    ends_at,
                     status,
                     created_at
                     FROM meetup
@@ -166,8 +167,6 @@ public class MeetupDao {
                 rs -> {
                     if(!rs.next())
                         return null;
-                    Timestamp endsAt = rs.getTimestamp("ends_at");
-
                     return new Meetup(
                             rs.getLong("meetup_id"),
                             rs.getLong("host_member_id"),
@@ -181,7 +180,6 @@ public class MeetupDao {
                             rs.getInt("capacity"),
                             rs.getTimestamp("starts_at")
                                     .toLocalDateTime(),
-                            endsAt == null ? null : endsAt.toLocalDateTime(),
                             MeetupStatus.valueOf(
                                     rs.getString("status")
                             ),
@@ -346,7 +344,8 @@ public class MeetupDao {
 
         if (savedMeetup == null
                 || savedMeetup.getStatus() == MeetupStatus.CANCELLED
-                || savedMeetup.getStatus() == MeetupStatus.COMPLETED) {
+                || savedMeetup.getStatus() == MeetupStatus.COMPLETED
+                || !savedMeetup.getStartsAt().isAfter(LocalDateTime.now())) {
             return MeetupUpdateResult.MEETUP_NOT_FOUND;
         }
 
@@ -369,6 +368,8 @@ public class MeetupDao {
             return MeetupUpdateResult.MEETUP_NOT_FOUND;
         }
 
+        refreshStatus(conn, meetup.getMeetupId());
+
         return MeetupUpdateResult.SUCCESS;
     }
 
@@ -388,6 +389,7 @@ public class MeetupDao {
             WHERE meetup_id = ?
               AND host_member_id = ?
               AND status NOT IN ('CANCELLED', 'COMPLETED')
+              AND starts_at > LOCALTIMESTAMP
             """;
 
         int updated = JDBCUtil.executeUpdate(
@@ -422,6 +424,7 @@ public class MeetupDao {
                 WHERE meetup_id = ?
                   AND host_member_id = ?
                   AND status NOT IN ('CANCELLED', 'COMPLETED')
+                  AND starts_at > LOCALTIMESTAMP
                 """;
 
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -440,7 +443,8 @@ public class MeetupDao {
                 if (meetup == null
                         || !meetup.getHostMemberId().equals(hostMemberId)
                         || meetup.getStatus() == MeetupStatus.CANCELLED
-                        || meetup.getStatus() == MeetupStatus.COMPLETED) {
+                        || meetup.getStatus() == MeetupStatus.COMPLETED
+                        || !meetup.getStartsAt().isAfter(LocalDateTime.now())) {
                     conn.rollback();
                     transactionCompleted = true;
                     return false;
@@ -623,6 +627,8 @@ public class MeetupDao {
             }
         }
 
+        refreshStatus(conn, meetupId);
+
         return MeetupJoinResult.SUCCESS;
     }
 
@@ -641,7 +647,6 @@ public class MeetupDao {
                 place,
                 capacity,
                 starts_at,
-                ends_at,
                 status,
                 created_at
             FROM meetup
@@ -655,9 +660,6 @@ public class MeetupDao {
                     if(!rs.next()){
                         return null;
                     }
-
-                    Timestamp endsAt = rs.getTimestamp("ends_at");
-
                     return new Meetup(
                             rs.getLong("meetup_id"),
                             rs.getLong("host_member_id"),
@@ -668,7 +670,6 @@ public class MeetupDao {
                             rs.getString("place"),
                             rs.getInt("capacity"),
                             rs.getTimestamp("starts_at").toLocalDateTime(),
-                            endsAt == null ? null : endsAt.toLocalDateTime(),
                             MeetupStatus.valueOf(rs.getString("status")),
                             rs.getTimestamp("created_at")
                                     .toLocalDateTime()
@@ -858,6 +859,8 @@ public class MeetupDao {
             );
         }
 
+        refreshStatus(conn, meetupId);
+
         return MeetupLeaveResult.SUCCESS;
     }
 
@@ -951,6 +954,51 @@ public class MeetupDao {
             );
         } catch(SQLException e){
             throw  new DatabaseException(e);
+        }
+    }
+
+    private void refreshStatus(
+            Connection conn,
+            Long meetupId
+    ) throws SQLException{
+        String sql = """
+        UPDATE meetup m
+        SET status = CASE
+            WHEN m.starts_at <= LOCALTIMESTAMP
+                THEN 'COMPLETED'
+            WHEN (
+                SELECT COUNT(*)
+                FROM meetup_participant mp
+                WHERE mp.meetup_id = m.meetup_id
+                  AND mp.status = 'ACTIVE'
+            ) >= m.capacity
+                THEN 'CLOSED'
+            ELSE 'OPEN'
+        END
+        WHERE m.meetup_id = ?
+          AND m.status IN ('OPEN', 'CLOSED')
+        """;
+
+        JDBCUtil.executeUpdate(
+                conn,
+                sql,
+                meetupId
+        );
+    }
+
+    // 시간이 지나면 completed처리
+    public void completeStartedMeetups() {
+        String sql = """
+        UPDATE meetup
+        SET status = 'COMPLETED'
+        WHERE status IN ('OPEN', 'CLOSED')
+          AND starts_at <= LOCALTIMESTAMP
+        """;
+
+        try (Connection conn = ConnectionManager.getConnection()) {
+            JDBCUtil.executeUpdate(conn, sql);
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
         }
     }
 }
