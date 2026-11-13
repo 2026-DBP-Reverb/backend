@@ -144,13 +144,12 @@ CREATE TABLE meetup
     title          VARCHAR2(200)                                       NOT NULL,
     description    CLOB,
     image_url      VARCHAR2(500),
-    category       VARCHAR2(20)                   DEFAULT 'OTHER'      NOT NULL,
-    place          VARCHAR2(255)                                       NOT NULL,
-    capacity       NUMBER(5)                      DEFAULT 10           NOT NULL,
-    starts_at      DATE                                                NOT NULL,
-    ends_at        DATE,
-    status         VARCHAR2(12)                   DEFAULT 'OPEN'       NOT NULL,
-    created_at     TIMESTAMP WITH LOCAL TIME ZONE DEFAULT SYSTIMESTAMP NOT NULL,
+    category       VARCHAR2(20)    DEFAULT 'OTHER' NOT NULL,
+    place          VARCHAR2(255)   NOT NULL,
+    capacity       NUMBER(5)       DEFAULT 10 NOT NULL,
+    starts_at      DATE   NOT NULL,
+    status         VARCHAR2(12)    DEFAULT 'OPEN' NOT NULL,
+    created_at     TIMESTAMP WITH LOCAL TIME ZONE DEFAULT systimestamp NOT NULL,
 
     CONSTRAINT meetup_pk PRIMARY KEY (meetup_id),
 
@@ -177,16 +176,12 @@ CREATE TABLE meetup
                        'COMPLETED',
                        'CANCELLED'
                 )
-            ),
-
-    CONSTRAINT meetup_time_ck
-        CHECK (
-            ends_at IS NULL
-                OR ends_at > starts_at
             )
 );
 
 CREATE INDEX meetup_host_idx ON meetup (host_member_id);
+
+CREATE INDEX meetup_status_starts_at_idx ON meetup (status, starts_at);
 
 CREATE TABLE meetup_participant
 (
@@ -221,6 +216,7 @@ CREATE TABLE meetup_participant
 
 CREATE INDEX meetup_participant_member_idx ON meetup_participant (member_id, meetup_id);
 
+<<<<<<< HEAD
 CREATE TABLE email_verification
 (
     email           VARCHAR2(255) PRIMARY KEY,

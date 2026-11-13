@@ -1,15 +1,21 @@
 package dbp.backend.meetup.service;
 
 import dbp.backend.common.exception.ApiException;
+import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.meetup.dao.MeetupDao;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.request.MeetupParticipantStatusUpdateRequest;
 import dbp.backend.meetup.dto.request.MeetupUpdateRequest;
 import dbp.backend.meetup.dto.response.MeetupDetailResponse;
+import dbp.backend.meetup.dto.response.MeetupListResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.meetup.model.Meetup;
+import dbp.backend.meetup.model.MeetupJoinResult;
+import dbp.backend.meetup.model.MeetupLeaveResult;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
+import dbp.backend.meetup.model.MeetupUpdateResult;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -44,7 +50,6 @@ public class MeetupManager {
                 place,
                 request.capacity(),
                 request.startsAt(),
-                null,
                 MeetupStatus.OPEN,
                 null
         );
@@ -84,14 +89,6 @@ public class MeetupManager {
 
         validateUpdateRequest(request, title, place, imageUrl);
 
-        int participantCount = meetupDao.countActiveParticipants(meetupId);
-
-        if(request.capacity()<participantCount){
-            throw new ApiException(
-                    MeetupErrorCode.CAPACITY_BELOW_PARTICIPANT_COUNT
-            );
-        }
-
         Meetup updateMeetup = new Meetup(
                 meetup.getMeetupId(),
                 meetup.getHostMemberId(),
@@ -102,17 +99,23 @@ public class MeetupManager {
                 place,
                 request.capacity(),
                 request.startsAt(),
-                meetup.getEndsAt(),
                 meetup.getStatus(),
                 meetup.getCreatedAt()
         );
 
-        boolean updated = meetupDao.update(updateMeetup);
+        MeetupUpdateResult result = meetupDao.update(updateMeetup);
 
-        if(!updated){
-            throw new ApiException(
+        switch (result) {
+            case SUCCESS -> {
+            }
+            case MEETUP_NOT_FOUND -> throw new ApiException(
                     MeetupErrorCode.MEETUP_NOT_FOUND
             );
+            case CAPACITY_BELOW_PARTICIPANT_COUNT ->
+                    throw new ApiException(
+                            MeetupErrorCode
+                                    .CAPACITY_BELOW_PARTICIPANT_COUNT
+                    );
         }
 
         Meetup savedMeetup = meetupDao.findById(meetupId);
@@ -133,6 +136,62 @@ public class MeetupManager {
         if (!deleted) {
             throw new ApiException(
                     MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+        }
+    }
+
+    // 모임 참여
+    public void joinMeetup(
+            Long meetupId,
+            Long loginMemberId
+    ){
+        MeetupJoinResult result = meetupDao.join(meetupId,loginMemberId);
+
+        switch (result) {
+            case SUCCESS -> {
+            }
+            case MEETUP_NOT_FOUND -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+            case MEETUP_NOT_OPEN -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_NOT_OPEN
+            );
+            case ALREADY_JOINED -> throw new ApiException(
+                    MeetupErrorCode.ALREADY_JOINED
+            );
+            case CAPACITY_FULL -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_CAPACITY_FULL);
+        }
+    }
+
+    // 모임 탈퇴
+    public void leaveMeetup(
+            Long meetupId,
+            Long loginMemberId,
+            MeetupParticipantStatusUpdateRequest request
+    ){
+        if (request == null || !"LEFT".equals(request.status())) {
+            throw new ApiException(
+                    CommonErrorCode.BAD_REQUEST
+            );
+        }
+
+        MeetupLeaveResult result = meetupDao.leave(meetupId, loginMemberId);
+
+        switch (result) {
+            case SUCCESS -> {
+            }
+            case MEETUP_NOT_FOUND -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+            case HOST_CANNOT_LEAVE -> throw new ApiException(
+                    MeetupErrorCode.HOST_CANNOT_LEAVE_MEETUP
+            );
+            case LEAVE_NOT_ALLOWED -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_LEAVE_NOT_ALLOWED
+            );
+            case NOT_JOINED -> throw new ApiException(
+                    MeetupErrorCode.NOT_MEETUP_PARTICIPANT
             );
         }
     }
@@ -164,7 +223,8 @@ public class MeetupManager {
             );
         }
 
-        if(meetup.getStatus() == MeetupStatus.COMPLETED){
+        if(meetup.getStatus() == MeetupStatus.COMPLETED
+                || !meetup.getStartsAt().isAfter(LocalDateTime.now())){
             throw new ApiException(
                     MeetupErrorCode.COMPLETED_MEETUP_CANNOT_BE_CHANGED
             );
@@ -260,4 +320,12 @@ public class MeetupManager {
     private String trim(String value) {
         return value == null ? null : value.trim();
     }
+
+    //모임 목록 기능
+    public List<MeetupListResponse> getMeetups(
+            Long loginMemberId
+    ){
+        return meetupDao.findAll(loginMemberId);
+    }
+
 }

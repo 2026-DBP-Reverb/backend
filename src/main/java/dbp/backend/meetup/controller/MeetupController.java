@@ -6,8 +6,10 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.meetup.dto.request.MeetupCreateRequest;
+import dbp.backend.meetup.dto.request.MeetupParticipantStatusUpdateRequest;
 import dbp.backend.meetup.dto.request.MeetupUpdateRequest;
 import dbp.backend.meetup.dto.response.MeetupDetailResponse;
+import dbp.backend.meetup.dto.response.MeetupListResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.service.MeetupManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +18,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Meetup", description = "모임 API")
 @RestController
@@ -109,4 +113,55 @@ public class MeetupController {
         return ResponseEntity.ok(new ResponseBody<>(null));
     }
 
+    @Operation(summary = "모임 목록 조회")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @GetMapping
+    public ResponseEntity<ResponseBody<List<MeetupListResponse>>> getMeetups(
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        List<MeetupListResponse> response =
+                meetupManager.getMeetups(loginMemberId);
+
+        return ResponseEntity.ok(
+                new ResponseBody<>(response)
+        );
+    }
+
+    @Operation(summary = "모임 참여")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @PostMapping("/{meetupId}/participants")
+    public ResponseEntity<ResponseBody<Void>> joinMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        meetupManager.joinMeetup(meetupId, loginMemberId);
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
+
+
+    @Operation(summary = "모임 탈퇴")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @PatchMapping("/{meetupId}/participants")
+    public ResponseEntity<ResponseBody<Void>> leaveMeetup(
+            @PathVariable("meetupId") Long meetupId,
+            @RequestBody MeetupParticipantStatusUpdateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        meetupManager.leaveMeetup(meetupId, loginMemberId, request);
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
 }
