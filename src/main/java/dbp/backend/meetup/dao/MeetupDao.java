@@ -344,7 +344,8 @@ public class MeetupDao {
 
         if (savedMeetup == null
                 || savedMeetup.getStatus() == MeetupStatus.CANCELLED
-                || savedMeetup.getStatus() == MeetupStatus.COMPLETED) {
+                || savedMeetup.getStatus() == MeetupStatus.COMPLETED
+                || !savedMeetup.getStartsAt().isAfter(LocalDateTime.now())) {
             return MeetupUpdateResult.MEETUP_NOT_FOUND;
         }
 
@@ -388,6 +389,7 @@ public class MeetupDao {
             WHERE meetup_id = ?
               AND host_member_id = ?
               AND status NOT IN ('CANCELLED', 'COMPLETED')
+              AND starts_at > LOCALTIMESTAMP
             """;
 
         int updated = JDBCUtil.executeUpdate(
@@ -422,6 +424,7 @@ public class MeetupDao {
                 WHERE meetup_id = ?
                   AND host_member_id = ?
                   AND status NOT IN ('CANCELLED', 'COMPLETED')
+                  AND starts_at > LOCALTIMESTAMP
                 """;
 
         try (Connection conn = ConnectionManager.getConnection()) {
@@ -440,7 +443,8 @@ public class MeetupDao {
                 if (meetup == null
                         || !meetup.getHostMemberId().equals(hostMemberId)
                         || meetup.getStatus() == MeetupStatus.CANCELLED
-                        || meetup.getStatus() == MeetupStatus.COMPLETED) {
+                        || meetup.getStatus() == MeetupStatus.COMPLETED
+                        || !meetup.getStartsAt().isAfter(LocalDateTime.now())) {
                     conn.rollback();
                     transactionCompleted = true;
                     return false;
