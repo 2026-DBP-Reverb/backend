@@ -12,7 +12,6 @@ public class Meetup {
     private final String place;
     private final Integer capacity;
     private final LocalDateTime startsAt;
-    private final LocalDateTime endsAt;
     private final MeetupStatus status;
     private final LocalDateTime createdAt;
 
@@ -26,7 +25,6 @@ public class Meetup {
             String place,
             Integer capacity,
             LocalDateTime startsAt,
-            LocalDateTime endsAt,
             MeetupStatus status,
             LocalDateTime createdAt
     ){
@@ -39,7 +37,6 @@ public class Meetup {
         this.place = place;
         this.capacity = capacity;
         this.startsAt = startsAt;
-        this.endsAt = endsAt;
         this.status = status;
         this.createdAt = createdAt;
     }
@@ -78,10 +75,6 @@ public class Meetup {
 
     public LocalDateTime getStartsAt() {
         return startsAt;
-    }
-
-    public LocalDateTime getEndsAt() {
-        return endsAt;
     }
 
     public MeetupStatus getStatus() {

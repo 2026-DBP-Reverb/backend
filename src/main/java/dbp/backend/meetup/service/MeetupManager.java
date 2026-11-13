@@ -50,7 +50,6 @@ public class MeetupManager {
                 place,
                 request.capacity(),
                 request.startsAt(),
-                null,
                 MeetupStatus.OPEN,
                 null
         );
@@ -100,7 +99,6 @@ public class MeetupManager {
                 place,
                 request.capacity(),
                 request.startsAt(),
-                meetup.getEndsAt(),
                 meetup.getStatus(),
                 meetup.getCreatedAt()
         );

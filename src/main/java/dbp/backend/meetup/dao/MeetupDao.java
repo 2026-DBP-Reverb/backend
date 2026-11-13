@@ -155,7 +155,6 @@ public class MeetupDao {
                     place,
                     capacity,
                     starts_at,
-                    ends_at,
                     status,
                     created_at
                     FROM meetup
@@ -168,8 +167,6 @@ public class MeetupDao {
                 rs -> {
                     if(!rs.next())
                         return null;
-                    Timestamp endsAt = rs.getTimestamp("ends_at");
-
                     return new Meetup(
                             rs.getLong("meetup_id"),
                             rs.getLong("host_member_id"),
@@ -183,7 +180,6 @@ public class MeetupDao {
                             rs.getInt("capacity"),
                             rs.getTimestamp("starts_at")
                                     .toLocalDateTime(),
-                            endsAt == null ? null : endsAt.toLocalDateTime(),
                             MeetupStatus.valueOf(
                                     rs.getString("status")
                             ),
@@ -647,7 +643,6 @@ public class MeetupDao {
                 place,
                 capacity,
                 starts_at,
-                ends_at,
                 status,
                 created_at
             FROM meetup
@@ -661,9 +656,6 @@ public class MeetupDao {
                     if(!rs.next()){
                         return null;
                     }
-
-                    Timestamp endsAt = rs.getTimestamp("ends_at");
-
                     return new Meetup(
                             rs.getLong("meetup_id"),
                             rs.getLong("host_member_id"),
@@ -674,7 +666,6 @@ public class MeetupDao {
                             rs.getString("place"),
                             rs.getInt("capacity"),
                             rs.getTimestamp("starts_at").toLocalDateTime(),
-                            endsAt == null ? null : endsAt.toLocalDateTime(),
                             MeetupStatus.valueOf(rs.getString("status")),
                             rs.getTimestamp("created_at")
                                     .toLocalDateTime()
