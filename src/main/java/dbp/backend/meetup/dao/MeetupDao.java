@@ -957,6 +957,68 @@ public class MeetupDao {
         }
     }
 
+    // 내가 개설한 모임 목록 조회
+    public List<MeetupListResponse> findAllByHostMemberId(
+            Long hostMemberId
+    ) {
+        String sql = """
+            SELECT
+                m.meetup_id,
+                m.title,
+                m.image_url,
+                m.place,
+                m.category,
+                m.capacity,
+                m.starts_at,
+                m.status,
+                (
+                    SELECT COUNT(*)
+                    FROM meetup_participant mp
+                    WHERE mp.meetup_id = m.meetup_id
+                      AND mp.status = 'ACTIVE'
+                ) AS participant_count,
+                1 AS joined
+            FROM meetup m
+            WHERE m.host_member_id = ?
+            ORDER BY m.starts_at ASC, m.meetup_id DESC
+            """;
+        try (Connection conn = ConnectionManager.getConnection()) {
+            return JDBCUtil.executeQuery(
+                    conn,
+                    sql,
+                    rs -> {
+                        List<MeetupListResponse> meetups = new ArrayList<>();
+
+                        while (rs.next()) {
+                            meetups.add(
+                                    new MeetupListResponse(
+                                            rs.getLong("meetup_id"),
+                                            rs.getString("title"),
+                                            rs.getString("image_url"),
+                                            rs.getString("place"),
+                                            MeetupCategory.valueOf(
+                                                    rs.getString("category")
+                                            ),
+                                            rs.getInt("participant_count"),
+                                            rs.getInt("capacity"),
+                                            rs.getTimestamp("starts_at")
+                                                    .toLocalDateTime(),
+                                            MeetupStatus.valueOf(
+                                                    rs.getString("status")
+                                            ),
+                                            rs.getInt("joined") == 1
+                                    )
+                            );
+                        }
+                        return meetups;
+                    },
+                    hostMemberId
+            );
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
     private void refreshStatus(
             Connection conn,
             Long meetupId

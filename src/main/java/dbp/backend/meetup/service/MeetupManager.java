@@ -74,6 +74,11 @@ public class MeetupManager {
         return MeetupDetailResponse.from(meetup,participants,loginMemberId);
     }
 
+    //  내가 개설한 모임 목록 조회
+    public List<MeetupListResponse> getHostedMeetups(Long hostMemberId){
+        return meetupDao.findAllByHostMemberId(hostMemberId);
+    }
+
     // 모임 정보 수정
     public MeetupResponse updateMeetup(
             Long meetupId,
