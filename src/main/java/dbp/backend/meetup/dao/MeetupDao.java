@@ -981,6 +981,7 @@ public class MeetupDao {
             FROM meetup m
             WHERE m.host_member_id = ?
               AND m.status IN ('OPEN', 'CLOSED')
+              AND m.starts_at > LOCALTIMESTAMP
             ORDER BY m.starts_at ASC, m.meetup_id DESC
             """;
         try (Connection conn = ConnectionManager.getConnection()) {
