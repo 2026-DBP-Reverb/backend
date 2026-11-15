@@ -11,7 +11,9 @@ import dbp.backend.meetup.dto.response.MeetupListResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.meetup.model.Meetup;
+import dbp.backend.meetup.model.MeetupDeleteResult;
 import dbp.backend.meetup.model.MeetupJoinResult;
+import dbp.backend.meetup.model.MeetupKickResult;
 import dbp.backend.meetup.model.MeetupLeaveResult;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
@@ -136,11 +138,16 @@ public class MeetupManager {
         Meetup meetup = getMeetupOrThrow(meetupId);
         validateMeetupChange(meetup, loginMemberId);
 
-        boolean deleted = meetupDao.delete(meetupId, loginMemberId);
+        MeetupDeleteResult result = meetupDao.delete(meetupId, loginMemberId);
 
-        if (!deleted) {
-            throw new ApiException(
+        switch (result) {
+            case SUCCESS -> {
+            }
+            case MEETUP_NOT_FOUND -> throw new ApiException(
                     MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+            case SETTLEMENT_EXISTS -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_HAS_SETTLEMENT
             );
         }
     }
@@ -166,6 +173,9 @@ public class MeetupManager {
             );
             case CAPACITY_FULL -> throw new ApiException(
                     MeetupErrorCode.MEETUP_CAPACITY_FULL);
+            case KICKED_MEMBER -> throw new ApiException(
+                    MeetupErrorCode.KICKED_MEMBER_CANNOT_JOIN
+            );
         }
     }
 
@@ -197,6 +207,53 @@ public class MeetupManager {
             );
             case NOT_JOINED -> throw new ApiException(
                     MeetupErrorCode.NOT_MEETUP_PARTICIPANT
+            );
+            case SETTLEMENT_EXISTS -> throw new ApiException(
+                    MeetupErrorCode.MEMBER_HAS_SETTLEMENT
+            );
+        }
+    }
+
+    // 모임 강퇴
+    public void kickMember(
+            Long meetupId,
+            Long loginMemberId,
+            Long targetMemberId,
+            MeetupParticipantStatusUpdateRequest request
+    ) {
+        if (request == null
+                || !"KICKED".equals(request.status())) {
+            throw new ApiException(
+                    CommonErrorCode.BAD_REQUEST
+            );
+        }
+
+        MeetupKickResult result = meetupDao.kick(
+                meetupId,
+                loginMemberId,
+                targetMemberId
+        );
+
+        switch (result) {
+            case SUCCESS -> {
+            }
+            case MEETUP_NOT_FOUND -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_NOT_FOUND
+            );
+            case NOT_MEETUP_HOST -> throw new ApiException(
+                    MeetupErrorCode.NOT_MEETUP_HOST
+            );
+            case HOST_CANNOT_BE_KICKED -> throw new ApiException(
+                    MeetupErrorCode.HOST_CANNOT_BE_KICKED
+            );
+            case KICK_NOT_ALLOWED -> throw new ApiException(
+                    MeetupErrorCode.MEETUP_KICK_NOT_ALLOWED
+            );
+            case NOT_JOINED -> throw new ApiException(
+                    MeetupErrorCode.NOT_MEETUP_PARTICIPANT
+            );
+            case SETTLEMENT_EXISTS -> throw new ApiException(
+                    MeetupErrorCode.MEMBER_HAS_SETTLEMENT
             );
         }
     }
