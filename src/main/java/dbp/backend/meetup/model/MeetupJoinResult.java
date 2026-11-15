@@ -5,5 +5,6 @@ public enum MeetupJoinResult {
     MEETUP_NOT_FOUND,
     MEETUP_NOT_OPEN,
     ALREADY_JOINED,
-    CAPACITY_FULL
+    CAPACITY_FULL,
+    KICKED_MEMBER
 }

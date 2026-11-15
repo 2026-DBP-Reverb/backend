@@ -203,7 +203,8 @@ CREATE TABLE meetup_participant
         CHECK (
             status IN (
                        'ACTIVE',
-                       'LEFT'
+                       'LEFT',
+                       'KICKED'
                 )
             ),
 
