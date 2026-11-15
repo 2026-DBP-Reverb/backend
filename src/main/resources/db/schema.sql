@@ -1,12 +1,12 @@
 CREATE TABLE member
 (
     member_id         NUMBER PRIMARY KEY,
-    email             VARCHAR2(255)                  NOT NULL UNIQUE,
-    password_hash     VARCHAR2(255)                  NOT NULL,
+    email             VARCHAR2(255)                     NOT NULL UNIQUE,
+    password_hash     VARCHAR2(255)                     NOT NULL,
     profile_image_url VARCHAR2(500),
     instagram_id      VARCHAR2(100),
     nickname          VARCHAR2(100),
-    created_at        TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL
+    created_at        TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL
 );
 
 CREATE SEQUENCE member_seq
@@ -110,8 +110,8 @@ CREATE TABLE mate_match_request
     requester_id NUMBER                            NOT NULL,
     recipient_id NUMBER                            NOT NULL,
     status       VARCHAR2(10) DEFAULT 'PENDING'    NOT NULL,
-    requested_at TIMESTAMP    DEFAULT SYSTIMESTAMP NOT NULL,
-    responded_at TIMESTAMP,
+    requested_at TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+    responded_at TIMESTAMP(6),
 
     CONSTRAINT mate_match_request_status_ck
         CHECK ( status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED')),
@@ -124,11 +124,11 @@ CREATE TABLE mate_match_request
 CREATE TABLE mate_match
 (
     match_id    NUMBER PRIMARY KEY,
-    request_id  NUMBER                         NOT NULL,
-    member_a_id NUMBER                         NOT NULL,
-    member_b_id NUMBER                         NOT NULL,
-    matched_at  TIMESTAMP DEFAULT SYSTIMESTAMP NOT NULL,
-    ended_at    TIMESTAMP,
+    request_id  NUMBER                            NOT NULL,
+    member_a_id NUMBER                            NOT NULL,
+    member_b_id NUMBER                            NOT NULL,
+    matched_at  TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+    ended_at    TIMESTAMP(6),
 
     CONSTRAINT mate_match_un UNIQUE (request_id, member_a_id, member_b_id),
     FOREIGN KEY (request_id, member_a_id, member_b_id)
@@ -139,17 +139,17 @@ CREATE SEQUENCE meetup_seq START WITH 1 INCREMENT BY 1;
 
 CREATE TABLE meetup
 (
-    meetup_id      NUMBER                                              NOT NULL,
-    host_member_id NUMBER                                              NOT NULL,
-    title          VARCHAR2(200)                                       NOT NULL,
+    meetup_id      NUMBER                            NOT NULL,
+    host_member_id NUMBER                            NOT NULL,
+    title          VARCHAR2(200)                     NOT NULL,
     description    CLOB,
     image_url      VARCHAR2(500),
-    category       VARCHAR2(20)    DEFAULT 'OTHER' NOT NULL,
-    place          VARCHAR2(255)   NOT NULL,
-    capacity       NUMBER(5)       DEFAULT 10 NOT NULL,
-    starts_at      DATE   NOT NULL,
-    status         VARCHAR2(12)    DEFAULT 'OPEN' NOT NULL,
-    created_at     TIMESTAMP WITH LOCAL TIME ZONE DEFAULT systimestamp NOT NULL,
+    category       VARCHAR2(20) DEFAULT 'OTHER'      NOT NULL,
+    place          VARCHAR2(255)                     NOT NULL,
+    capacity       NUMBER(5)    DEFAULT 10           NOT NULL,
+    starts_at      DATE                              NOT NULL,
+    status         VARCHAR2(12) DEFAULT 'OPEN'       NOT NULL,
+    created_at     TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
 
     CONSTRAINT meetup_pk PRIMARY KEY (meetup_id),
 
@@ -185,11 +185,11 @@ CREATE INDEX meetup_status_starts_at_idx ON meetup (status, starts_at);
 
 CREATE TABLE meetup_participant
 (
-    meetup_id NUMBER                                              NOT NULL,
-    member_id NUMBER                                              NOT NULL,
-    status    VARCHAR2(8)                    DEFAULT 'ACTIVE'     NOT NULL,
-    joined_at TIMESTAMP WITH LOCAL TIME ZONE DEFAULT SYSTIMESTAMP NOT NULL,
-    left_at   TIMESTAMP WITH LOCAL TIME ZONE,
+    meetup_id NUMBER                            NOT NULL,
+    member_id NUMBER                            NOT NULL,
+    status    VARCHAR2(8)  DEFAULT 'ACTIVE'     NOT NULL,
+    joined_at TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+    left_at   TIMESTAMP(6),
 
     CONSTRAINT meetup_participant_pk PRIMARY KEY (meetup_id, member_id),
 
@@ -216,7 +216,6 @@ CREATE TABLE meetup_participant
 
 CREATE INDEX meetup_participant_member_idx ON meetup_participant (member_id, meetup_id);
 
-<<<<<<< HEAD
 CREATE TABLE email_verification
 (
     email           VARCHAR2(255) PRIMARY KEY,
@@ -232,17 +231,17 @@ CREATE SEQUENCE settlement_seq START WITH 1 INCREMENT BY 1;
 
 CREATE TABLE settlement
 (
-    settlement_id     NUMBER                         DEFAULT settlement_seq.nextval PRIMARY KEY,
-    meetup_id         NUMBER                                              NOT NULL,
-    paid_by_member_id NUMBER                                              NOT NULL,
-    title             VARCHAR2(255)                                       NOT NULL,
-    total_amount      NUMBER(12)                                          NOT NULL
+    settlement_id     NUMBER       DEFAULT settlement_seq.nextval PRIMARY KEY,
+    meetup_id         NUMBER                            NOT NULL,
+    paid_by_member_id NUMBER                            NOT NULL,
+    title             VARCHAR2(255)                     NOT NULL,
+    total_amount      NUMBER(12)                        NOT NULL
         CHECK ( total_amount > 0 ),
-    account           VARCHAR2(127)                                       NOT NULL,
-    split_method      VARCHAR2(8)                    DEFAULT 'EQUAL'      NOT NULL
+    account           VARCHAR2(127)                     NOT NULL,
+    split_method      VARCHAR2(8)  DEFAULT 'EQUAL'      NOT NULL
         CHECK ( split_method IN ('EQUAL', 'WEIGHTED') ),
-    spent_at          DATE                                                NOT NULL,
-    created_at        TIMESTAMP WITH LOCAL TIME ZONE DEFAULT SYSTIMESTAMP NOT NULL
+    spent_at          DATE                              NOT NULL,
+    created_at        TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL
 );
 
 CREATE INDEX settlement_payer_idx ON settlement (meetup_id, paid_by_member_id);
@@ -258,15 +257,15 @@ ALTER TABLE settlement
 
 CREATE TABLE settlement_share
 (
-    settlement_id NUMBER                                              NOT NULL,
-    member_id     NUMBER                                              NOT NULL,
-    meetup_id     NUMBER                                              NOT NULL,
-    amount        NUMBER(12)                                          NOT NULL
+    settlement_id NUMBER                            NOT NULL,
+    member_id     NUMBER                            NOT NULL,
+    meetup_id     NUMBER                            NOT NULL,
+    amount        NUMBER(12)                        NOT NULL
         CHECK ( amount >= 0 ),
-    status        VARCHAR2(10)                   DEFAULT 'UNPAID'     NOT NULL
+    status        VARCHAR2(10) DEFAULT 'UNPAID'     NOT NULL
         CHECK ( status IN ('UNPAID', 'REQUESTED', 'CONFIRMED') ),
-    created_at    TIMESTAMP WITH LOCAL TIME ZONE DEFAULT SYSTIMESTAMP NOT NULL,
-    confirmed_at  TIMESTAMP WITH LOCAL TIME ZONE
+    created_at    TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+    confirmed_at  TIMESTAMP(6)
 );
 
 ALTER TABLE settlement_share
