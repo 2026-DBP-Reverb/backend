@@ -6,7 +6,7 @@ public record MeetupParticipantStatusUpdateRequest(
         @Schema(
                 description = "변경할 참여 상태",
                 example = "LEFT",
-                allowableValues = {"LEFT"},
+                allowableValues = {"LEFT", "KICKED"},
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         String status

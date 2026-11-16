@@ -42,7 +42,7 @@ public enum MeetupErrorCode implements ErrorCode {
     ),
     NOT_MEETUP_HOST(
             HttpServletResponse.SC_FORBIDDEN,
-            "모임장만 모임을 수정하거나 삭제할 수 있습니다."
+            "모임장 권한이 필요합니다."
     ),
     COMPLETED_MEETUP_CANNOT_BE_CHANGED(
             HttpServletResponse.SC_CONFLICT,
@@ -75,6 +75,26 @@ public enum MeetupErrorCode implements ErrorCode {
     NOT_MEETUP_PARTICIPANT(
             HttpServletResponse.SC_CONFLICT,
             "현재 참여 중인 모임이 아닙니다."
+    ),
+    HOST_CANNOT_BE_KICKED(
+            HttpServletResponse.SC_CONFLICT,
+            "모임장은 강퇴할 수 없습니다."
+    ),
+    MEETUP_KICK_NOT_ALLOWED(
+            HttpServletResponse.SC_CONFLICT,
+            "현재 멤버를 강퇴할 수 없는 모임입니다."
+    ),
+    MEMBER_HAS_SETTLEMENT(
+            HttpServletResponse.SC_CONFLICT,
+            "정산 내역이 있는 회원은 탈퇴하거나 강퇴할 수 없습니다."
+    ),
+    MEETUP_HAS_SETTLEMENT(
+            HttpServletResponse.SC_CONFLICT,
+            "정산 내역이 있는 모임은 삭제할 수 없습니다."
+    ),
+    KICKED_MEMBER_CANNOT_JOIN(
+            HttpServletResponse.SC_FORBIDDEN,
+            "강퇴된 회원은 모임에 다시 참여할 수 없습니다."
     );
 
     private final int statusCode;

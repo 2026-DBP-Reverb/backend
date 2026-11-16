@@ -5,5 +5,6 @@ public enum MeetupLeaveResult {
     MEETUP_NOT_FOUND,
     HOST_CANNOT_LEAVE,
     LEAVE_NOT_ALLOWED,
-    NOT_JOINED
+    NOT_JOINED,
+    SETTLEMENT_EXISTS
 }

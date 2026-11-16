@@ -6,7 +6,9 @@ import dbp.backend.common.exception.DatabaseException;
 import dbp.backend.meetup.dto.response.MeetupListResponse;
 import dbp.backend.meetup.model.Meetup;
 import dbp.backend.meetup.model.MeetupCategory;
+import dbp.backend.meetup.model.MeetupDeleteResult;
 import dbp.backend.meetup.model.MeetupJoinResult;
+import dbp.backend.meetup.model.MeetupKickResult;
 import dbp.backend.meetup.model.MeetupLeaveResult;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
@@ -410,7 +412,7 @@ public class MeetupDao {
     }
 
     // 모임 삭제 처리
-    public boolean delete(
+    public MeetupDeleteResult delete(
             Long meetupId,
             Long hostMemberId
     ) {
@@ -447,7 +449,16 @@ public class MeetupDao {
                         || !meetup.getStartsAt().isAfter(LocalDateTime.now())) {
                     conn.rollback();
                     transactionCompleted = true;
-                    return false;
+                    return MeetupDeleteResult.MEETUP_NOT_FOUND;
+                }
+
+                if (existsSettlementByMeetupId(
+                        conn,
+                        meetupId
+                )) {
+                    conn.rollback();
+                    transactionCompleted = true;
+                    return MeetupDeleteResult.SETTLEMENT_EXISTS;
                 }
 
                 JDBCUtil.executeUpdate(
@@ -466,12 +477,12 @@ public class MeetupDao {
                 if (deleted != 1) {
                     conn.rollback();
                     transactionCompleted = true;
-                    return false;
+                    return MeetupDeleteResult.MEETUP_NOT_FOUND;
                 }
 
                 conn.commit();
                 transactionCompleted = true;
-                return true;
+                return MeetupDeleteResult.SUCCESS;
 
             } catch (SQLException | RuntimeException e) {
                 transactionFailure = e;
@@ -593,6 +604,10 @@ public class MeetupDao {
 
         if("ACTIVE".equals(participantStatus)){
             return MeetupJoinResult.ALREADY_JOINED;
+        }
+
+        if ("KICKED".equals(participantStatus)) {
+            return MeetupJoinResult.KICKED_MEMBER;
         }
 
         int participantCount = countActiveParticipants(conn,meetupId);
@@ -847,6 +862,14 @@ public class MeetupDao {
             return MeetupLeaveResult.NOT_JOINED;
         }
 
+        if (existsSettlementByMember(
+                conn,
+                meetupId,
+                memberId
+        )) {
+            return MeetupLeaveResult.SETTLEMENT_EXISTS;
+        }
+
         boolean left = deactivateParticipant(
                 conn,
                 meetupId,
@@ -877,6 +900,171 @@ public class MeetupDao {
                   AND member_id = ?
                   AND status = 'ACTIVE'
                 """;
+        int updated = JDBCUtil.executeUpdate(
+                conn,
+                sql,
+                meetupId,
+                memberId
+        );
+
+        return updated == 1;
+    }
+
+    //모임 멤버 강퇴
+    public MeetupKickResult kick(
+            Long meetupId,
+            Long hostMemberId,
+            Long targetMemberId
+    ){
+        try (Connection conn =
+                     ConnectionManager.getConnection()) {
+            boolean autoCommit = conn.getAutoCommit();
+            boolean transactionCompleted = false;
+            Throwable transactionFailure = null;
+
+            try {
+                conn.setAutoCommit(false);
+
+                MeetupKickResult result = kickInTransaction(
+                        conn,
+                        meetupId,
+                        hostMemberId,
+                        targetMemberId
+                );
+
+                if (result == MeetupKickResult.SUCCESS) {
+                    conn.commit();
+                } else {
+                    conn.rollback();
+                }
+
+                transactionCompleted = true;
+                return result;
+
+            } catch (SQLException | RuntimeException e) {
+                transactionFailure = e;
+
+                try {
+                    conn.rollback();
+                    transactionCompleted = true;
+                } catch (SQLException rollbackException) {
+                    e.addSuppressed(rollbackException);
+                }
+
+                if (e instanceof SQLException sqlException) {
+                    throw new DatabaseException(sqlException);
+                }
+
+                throw (RuntimeException) e;
+
+            } finally {
+                if (transactionCompleted) {
+                    try {
+                        conn.setAutoCommit(autoCommit);
+                    } catch (SQLException restoreException) {
+                        if (transactionFailure != null) {
+                            transactionFailure.addSuppressed(
+                                    restoreException
+                            );
+                        } else {
+                            throw restoreException;
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+
+    private MeetupKickResult kickInTransaction(
+            Connection conn,
+            Long meetupId,
+            Long hostMemberId,
+            Long targetMemberId
+    ) throws SQLException {
+        Meetup meetup = findByIdForUpdate(
+                conn,
+                meetupId
+        );
+
+        if (meetup == null
+                || meetup.getStatus() == MeetupStatus.CANCELLED) {
+            return MeetupKickResult.MEETUP_NOT_FOUND;
+        }
+
+        // 요청자가 모임장인지 확인
+        if (!meetup.getHostMemberId().equals(hostMemberId)) {
+            return MeetupKickResult.NOT_MEETUP_HOST;
+        }
+
+        // 모임장 자신은 강퇴할 수 없음
+        if (meetup.getHostMemberId().equals(targetMemberId)) {
+            return MeetupKickResult.HOST_CANNOT_BE_KICKED;
+        }
+
+        // 완료됐거나 시작 시간이 지난 모임에서는 강퇴 불가
+        if (meetup.getStatus() == MeetupStatus.COMPLETED
+                || !meetup.getStartsAt()
+                .isAfter(LocalDateTime.now())) {
+            return MeetupKickResult.KICK_NOT_ALLOWED;
+        }
+
+        String participantStatus = findParticipantStatus(
+                conn,
+                meetupId,
+                targetMemberId
+        );
+
+        // 현재 참여 중인 회원만 강퇴 가능
+        if (!"ACTIVE".equals(participantStatus)) {
+            return MeetupKickResult.NOT_JOINED;
+        }
+
+        // 결제자 또는 정산 대상자인 회원은 강퇴 불가
+        if (existsSettlementByMember(
+                conn,
+                meetupId,
+                targetMemberId
+        )) {
+            return MeetupKickResult.SETTLEMENT_EXISTS;
+        }
+
+        boolean kicked = kickParticipant(
+                conn,
+                meetupId,
+                targetMemberId
+        );
+
+        if (!kicked) {
+            throw new SQLException(
+                    "모임 참여자를 강퇴할 수 없습니다."
+            );
+        }
+
+        // 강퇴로 참여 인원이 줄어들면 갱신
+        refreshStatus(conn, meetupId);
+
+        return MeetupKickResult.SUCCESS;
+    }
+
+
+    private boolean kickParticipant(
+            Connection conn,
+            Long meetupId,
+            Long memberId
+    ) throws SQLException {
+        String sql = """
+            UPDATE meetup_participant
+            SET status = 'KICKED',
+                left_at = SYSTIMESTAMP
+            WHERE meetup_id = ?
+              AND member_id = ?
+              AND status = 'ACTIVE'
+            """;
+
         int updated = JDBCUtil.executeUpdate(
                 conn,
                 sql,
@@ -1063,4 +1251,70 @@ public class MeetupDao {
             throw new DatabaseException(e);
         }
     }
+
+    // 회원 관련 정산 확인
+    private boolean existsSettlementByMember(
+            Connection conn,
+            Long meetupId,
+            Long memberId
+    ) throws SQLException{
+        String sql = """
+            SELECT COUNT(*)
+            FROM (
+                SELECT 1
+                FROM settlement
+                WHERE meetup_id = ?
+                  AND paid_by_member_id = ?
+
+                UNION ALL
+
+                SELECT 1
+                FROM settlement_share
+                WHERE meetup_id = ?
+                  AND member_id = ?
+            )
+            """;
+
+        int count = JDBCUtil.executeQuery(
+                conn,
+                sql,
+                rs -> {
+                    rs.next();
+                    return rs.getInt(1);
+                },
+                meetupId,
+                memberId,
+                meetupId,
+                memberId
+        );
+
+        return count > 0;
+    }
+
+    // 모임 정산 확인
+    private boolean existsSettlementByMeetupId(
+            Connection conn,
+            Long meetupId
+    ) throws SQLException{
+        String sql = """
+                SELECT COUNT(*)
+                FROM settlement
+                WHERE meetup_id = ?
+                """;
+
+        int count = JDBCUtil.executeQuery(
+                conn,
+                sql,
+                rs -> {
+                    rs.next();
+                    return rs.getInt(1);
+                },
+                meetupId
+        );
+
+        return count > 0;
+    }
+
+
+
 }

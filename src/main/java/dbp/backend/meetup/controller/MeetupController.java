@@ -13,6 +13,9 @@ import dbp.backend.meetup.dto.response.MeetupListResponse;
 import dbp.backend.meetup.dto.response.MeetupResponse;
 import dbp.backend.meetup.service.MeetupManager;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -179,5 +182,43 @@ public class MeetupController {
         List<MeetupListResponse> response = meetupManager.getHostedMeetups(loginMemberId);
 
         return ResponseEntity.ok(new ResponseBody<>(response));
+    }
+
+    @Operation(summary = "모임 멤버 강퇴")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @PatchMapping("/{meetupId}/participants/{memberId}")
+    public ResponseEntity<ResponseBody<Void>> kickMember(
+            @PathVariable("meetupId") Long meetupId,
+            @PathVariable("memberId") Long targetMemberId,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(
+                                    implementation = MeetupParticipantStatusUpdateRequest.class
+                            ),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                              "status": "KICKED"
+                                            }
+                                            """
+                            )
+                    )
+            )
+            @RequestBody MeetupParticipantStatusUpdateRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        Long loginMemberId = getMemberId(httpRequest);
+
+        meetupManager.kickMember(
+                meetupId,
+                loginMemberId,
+                targetMemberId,
+                request
+        );
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
     }
 }
