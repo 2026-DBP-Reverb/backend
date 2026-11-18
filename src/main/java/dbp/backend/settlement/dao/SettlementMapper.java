@@ -1,7 +1,9 @@
 package dbp.backend.settlement.dao;
 
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
+import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 
@@ -76,4 +78,33 @@ public interface SettlementMapper {
             ORDER BY s.created_at DESC, settlement_id DESC
             """)
     List<SettlementSummaryResponse> findSettlementsByMeetupId(Long meetupId);
+
+    @Select("""
+            SELECT s.settlement_id,
+                   s.meetup_id,
+                   s.title,
+                   s.total_amount,
+                   s.spent_at,
+                   s.account,
+                   s.split_method,
+                   s.paid_by_member_id,
+                   m.nickname
+            FROM settlement s, member m
+            WHERE s.paid_by_member_id = m.member_id
+            AND s.settlement_id = #{settlementId}
+    """)
+    SettlementDetail findSettlementDetail(Long settlementId);
+
+    @Select("""
+            SELECT ss.member_id,
+                   m.nickname,
+                   m.profile_image_url,
+                   ss.amount,
+                   ss.status
+            FROM settlement_share ss, member m 
+            WHERE ss.member_id = m.member_id
+              AND ss.settlement_id = #{settlementId}
+            ORDER BY ss.member_id
+            """)
+    List<SettlementDetailResponse.ShareItem> findSettlementShares(Long settlementId);
 }
