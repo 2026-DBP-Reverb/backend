@@ -13,6 +13,7 @@ import dbp.backend.meetup.model.MeetupLeaveResult;
 import dbp.backend.meetup.model.MeetupParticipant;
 import dbp.backend.meetup.model.MeetupStatus;
 import dbp.backend.meetup.model.MeetupUpdateResult;
+import dbp.backend.home.dto.response.HomeMeetupCardResponse;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Connection;
@@ -1315,6 +1316,62 @@ public class MeetupDao {
         return count > 0;
     }
 
+    // 홈 화면 최근 등록 모임 조회
+    public List<HomeMeetupCardResponse>
+    findRecentMeetups() {
+        String sql = """
+                SELECT
+                    m.meetup_id,
+                    m.title,
+                    m.image_url,
+                    m.capacity,
+                    COUNT(mp.member_id)
+                        AS participant_count
+                    FROM meetup m
+                    LEFT JOIN meetup_participant mp
+                        ON mp.meetup_id = m.meetup_id
+                        AND mp.status = 'ACTIVE'
+                    WHERE m.status IN ('OPEN', 'CLOSED')
+                    GROUP BY
+                        m.meetup_id,
+                        m.title,
+                        m.image_url,
+                        m.capacity,
+                        m.created_at
+                    ORDER BY
+                        m.created_at DESC,
+                        m.meetup_id DESC
+                """;
+        try (Connection conn =
+                     ConnectionManager.getConnection()) {
+            return JDBCUtil.executeQuery(
+                    conn,
+                    sql,
+                    rs -> {
+                        List<HomeMeetupCardResponse> meetups =
+                                new ArrayList<>();
 
+                        while (rs.next()) {
+                            meetups.add(
+                                    new HomeMeetupCardResponse(
+                                            rs.getLong("meetup_id"),
+                                            rs.getString("title"),
+                                            rs.getInt(
+                                                    "participant_count"
+                                            ),
+                                            rs.getInt("capacity"),
+                                            rs.getString("image_url")
+                                    )
+                            );
+                        }
 
+                        return meetups;
+
+                    }
+            );
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
 }
+
