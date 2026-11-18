@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import dbp.backend.common.response.ResponseBody;
+import dbp.backend.home.dto.response.HomeMemberCardResponse;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -42,6 +43,26 @@ public class HomeController {
 
         List<HomeMeetupCardResponse> response =
                 homeManager.getRecentMeetups();
+
+        return ResponseEntity.ok(
+                new ResponseBody<>(response)
+        );
+    }
+
+    @Operation(summary = "홈 최근 가입 회원 조회")
+    @SecurityRequirement(
+            name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME
+    )
+    @GetMapping("/members")
+    public ResponseEntity<
+            ResponseBody<List<HomeMemberCardResponse>>
+            > getRecentMembers(
+            HttpServletRequest request
+    ) {
+        Long memberId = getMemberId(request);
+
+        List<HomeMemberCardResponse> response =
+                homeManager.getRecentMembers(memberId);
 
         return ResponseEntity.ok(
                 new ResponseBody<>(response)
