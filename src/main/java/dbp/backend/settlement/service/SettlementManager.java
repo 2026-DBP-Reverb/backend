@@ -4,8 +4,10 @@ import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.settlement.dao.SettlementRepository;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
+import dbp.backend.settlement.model.SettlementDetail;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -47,5 +49,43 @@ public class SettlementManager {
         }
 
         return settlementRepository.findSettlementsByMeetupId(meetupId);
+    }
+
+    /**
+     * 정산 상세 조회 (기본 정보 + 멤버별 정산 항목)
+     *
+     * @param memberId     로그인한 회원 (권한 체크용)
+     * @param settlementId 조회할 정산 id
+     */
+    public SettlementDetailResponse getSettlementDetail(Long memberId, Long settlementId) {
+        // 1. 정산 기본 정보 조회
+        SettlementDetail detail = settlementRepository.findSettlementDetail(settlementId);
+
+        // 2. 없는 정산이면 404
+        if(detail == null) {
+            throw new ApiException(SettlementErrorCode.SETTLEMENT_NOT_FOUND);
+        }
+
+        // 3. 이 정산이 속한 모임의 참여자가 아니면 403
+        List<Long> participantIds = settlementRepository.findMeetupParticipantMemberIds(detail.meetupId());
+        if (!participantIds.contains(memberId)) {
+            throw new ApiException(CommonErrorCode.FORBIDDEN);
+        }
+
+        // 4. 멤버별 정산 항목 조회
+        List<SettlementDetailResponse.ShareItem> shares = settlementRepository.findSettlementShares(settlementId);
+
+        // 5. 기본 정보 + 멤버별 항목을 합쳐서 응답 생성
+        return new SettlementDetailResponse(
+                detail.settlementId(),
+                detail.title(),
+                detail.totalAmount(),
+                detail.spentAt(),
+                detail.account(),
+                detail.splitMethod(),
+                detail.paidByMemberId(),
+                detail.paidByNickname(),
+                shares
+        );
     }
 }
