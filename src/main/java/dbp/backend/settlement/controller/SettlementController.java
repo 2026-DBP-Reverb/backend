@@ -6,6 +6,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.service.SettlementManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,5 +58,24 @@ public class SettlementController {
 
         List<SettlementSummaryResponse> settlements = settlementManager.getSettlementsList(memberId, meetupId);
         return ResponseEntity.ok(new ResponseBody<>(settlements));
+    }
+
+    @Operation(summary = "정산 상세 조회")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    @GetMapping("/{settlementId}")
+    public ResponseEntity<ResponseBody<SettlementDetailResponse>> getSettlementDetail(
+            @PathVariable Long settlementId,
+            HttpServletRequest httpServletRequest
+    ){
+        // 로그인 확인
+        Long memberId = SessionUtil.getLoginMemberId(httpServletRequest);
+        if (memberId == null) {
+            throw new ApiException(CommonErrorCode.UNAUTHORIZED);
+        }
+
+        // 정산 상세 조회 (기본 정보 + 멤버별 정산 항목)
+        SettlementDetailResponse settlementDetail = settlementManager.getSettlementDetail(memberId, settlementId);
+        return ResponseEntity.ok(new ResponseBody<>(settlementDetail));
+
     }
 }

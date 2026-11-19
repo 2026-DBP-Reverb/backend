@@ -6,8 +6,10 @@ import dbp.backend.common.exception.DatabaseException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.meetup.exception.MeetupErrorCode;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
+import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
@@ -105,6 +107,24 @@ public class SettlementRepository {
     public List<SettlementSummaryResponse> findSettlementsByMeetupId(Long meetupId) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
             return sqlSession.getMapper(SettlementMapper.class).findSettlementsByMeetupId(meetupId);
+        } catch (PersistenceException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    // 정산 1건의 기본 정보 조회 (없으면 null)
+    public SettlementDetail findSettlementDetail(Long settlementId) {
+        try (SqlSession sqlSession = sqlSessionFactory.openSession()){
+            return sqlSession.getMapper(SettlementMapper.class).findSettlementDetail(settlementId);
+        } catch (PersistenceException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    // 정산의 멤버별 금액·상태 목록 조회
+    public List<SettlementDetailResponse.ShareItem> findSettlementShares(Long settlementId) {
+        try (SqlSession sqlSession = sqlSessionFactory.openSession()){
+            return sqlSession.getMapper(SettlementMapper.class).findSettlementShares(settlementId);
         } catch (PersistenceException e) {
             throw new DatabaseException(e);
         }
