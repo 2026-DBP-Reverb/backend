@@ -6,6 +6,7 @@ import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -107,4 +108,15 @@ public interface SettlementMapper {
             ORDER BY ss.member_id
             """)
     List<SettlementDetailResponse.ShareItem> findSettlementShares(Long settlementId);
+
+    // 내 정산 항목을 송금 보고 상태로 변경 (UNPAID → REQUESTED)
+    // 반환값: 바뀐 행 수 (0이면 대상 아님 또는 이미 보고함)
+    @Update("""
+        UPDATE settlement_share
+        SET status = 'REQUESTED'
+        WHERE settlement_id = #{settlementId}
+        AND member_id = #{memberId}
+        AND status = 'UNPAID'
+        """)
+    int requestTransfer(Long settlementId, Long memberId);
 }
