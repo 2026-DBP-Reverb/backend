@@ -129,4 +129,15 @@ public class SettlementRepository {
             throw new DatabaseException(e);
         }
     }
+
+    // 송금 보고: 바뀐 행 수 반환
+    public int requestTransfer(Long settlementId, Long memberId) {
+        try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
+            int updated = sqlSession.getMapper(SettlementMapper.class).requestTransfer(settlementId, memberId);
+            sqlSession.commit();
+            return updated;
+        } catch (PersistenceException e) {
+            throw new DatabaseException(e);
+        }
+    }
 }

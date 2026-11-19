@@ -16,7 +16,8 @@ public enum SettlementErrorCode implements ErrorCode {
     DUPLICATED_PARTICIPANTS(HttpServletResponse.SC_BAD_REQUEST, "정산 참여 멤버에 중복된 멤버가 있습니다."),
     INVALID_TOTAL_AMOUNT(HttpServletResponse.SC_BAD_REQUEST, "총 정산 금액은 양수이며 멤버별 정산 금액 합계와 같아야 합니다."),
     NOT_MEETUP_PARTICIPANT(HttpServletResponse.SC_BAD_REQUEST, "정산 참여자 중 해당 모임 멤버가 아닌 사용자가 존재합니다."),
-    SETTLEMENT_NOT_FOUND(HttpServletResponse.SC_NOT_FOUND, "정산 내역을 찾을 수 없습니다.");
+    SETTLEMENT_NOT_FOUND(HttpServletResponse.SC_NOT_FOUND, "정산 내역을 찾을 수 없습니다."),
+    TRANSFER_REQUEST_NOT_ALLOWED(HttpServletResponse.SC_CONFLICT, "송금 보고할 수 있는 정산 항목이 없습니다.");
 
     private final int statusCode;
     private final String detail;

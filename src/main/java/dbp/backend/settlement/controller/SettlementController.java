@@ -78,4 +78,23 @@ public class SettlementController {
         return ResponseEntity.ok(new ResponseBody<>(settlementDetail));
 
     }
+
+    @Operation(summary = "송금 보고")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    @PutMapping("/{settlementId}/request")
+    public ResponseEntity<ResponseBody<Void>> requestTransfer(
+            @PathVariable Long settlementId,
+            HttpServletRequest httpServletRequest
+    ) {
+        // 로그인 확인
+        Long memberId = SessionUtil.getLoginMemberId(httpServletRequest);
+        if (memberId == null) {
+            throw new ApiException(CommonErrorCode.UNAUTHORIZED);
+        }
+
+        // 송금 보고 (내 정산 항목을 UNPAID → REQUESTED)
+        settlementManager.requestTransfer(memberId, settlementId);
+
+        return ResponseEntity.ok(new ResponseBody<>(null));
+    }
 }
