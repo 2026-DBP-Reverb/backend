@@ -233,4 +233,127 @@ public class MateRecommendationDao {
             throw new DatabaseException(e);
         }
     }
+
+    // 최근 가입한 회원 순으로 추천 메이트 찾기
+    public List<MateCandidate> findRecentCandidates(
+            Long memberId,
+            int limit
+    ) {
+        try (Connection conn =
+                     ConnectionManager.getConnection()) {
+
+            return JDBCUtil.executeQuery(
+                    conn,
+                    """
+                    WITH tags AS (
+                        SELECT
+                            member_id,
+                            'A:' || spotify_artist_id AS tag
+                        FROM member_artist_taste
+    
+                        UNION ALL
+    
+                        SELECT
+                            member_id,
+                            'G:' || TO_CHAR(genre_id) AS tag
+                        FROM member_genre_taste
+    
+                        UNION ALL
+    
+                        SELECT
+                            member_id,
+                            'T:' || spotify_track_id AS tag
+                        FROM member_track_taste
+                    ),
+                    tag_counts AS (
+                        SELECT
+                            member_id,
+                            COUNT(*) AS tag_count
+                        FROM tags
+                        GROUP BY member_id
+                    ),
+                    my_count AS (
+                        SELECT COUNT(*) AS tag_count
+                        FROM tags
+                        WHERE member_id = ?
+                    ),
+                    common_counts AS (
+                        SELECT
+                            other.member_id AS other_id,
+                            COUNT(*) AS common_count
+                        FROM tags mine
+                        JOIN tags other
+                          ON other.tag = mine.tag
+                         AND other.member_id <> mine.member_id
+                        WHERE mine.member_id = ?
+                        GROUP BY other.member_id
+                    )
+                    SELECT
+                        m.member_id,
+                        m.nickname,
+                        m.profile_image_url,
+                        ROUND(
+                            NVL(common_count.common_count, 0)
+                            / (
+                                my_count.tag_count
+                                + candidate_count.tag_count
+                                - NVL(common_count.common_count, 0)
+                            ) * 100
+                        ) AS match_rate
+                    FROM member m
+                    JOIN tag_counts candidate_count
+                      ON candidate_count.member_id = m.member_id
+                    CROSS JOIN my_count
+                    LEFT JOIN common_counts common_count
+                      ON common_count.other_id = m.member_id
+                    WHERE m.member_id <> ?
+                      AND TRIM(m.nickname) IS NOT NULL
+                      AND EXISTS (
+                          SELECT 1
+                          FROM member_artist_taste artist_taste
+                          WHERE artist_taste.member_id = m.member_id
+                      )
+                      AND EXISTS (
+                          SELECT 1
+                          FROM member_genre_taste genre_taste
+                          WHERE genre_taste.member_id = m.member_id
+                      )
+                      AND EXISTS (
+                          SELECT 1
+                          FROM member_track_taste track_taste
+                          WHERE track_taste.member_id = m.member_id
+                      )
+                    ORDER BY
+                        m.created_at DESC,
+                        m.member_id DESC
+                    FETCH FIRST ? ROWS ONLY
+                    """,
+                    rs -> {
+                        List<MateCandidate> candidates =
+                                new ArrayList<>();
+
+                        while (rs.next()) {
+                            candidates.add(
+                                    new MateCandidate(
+                                            rs.getLong("member_id"),
+                                            rs.getString("nickname"),
+                                            rs.getString(
+                                                    "profile_image_url"
+                                            ),
+                                            rs.getInt("match_rate")
+                                    )
+                            );
+                        }
+
+                        return candidates;
+                    },
+                    memberId,
+                    memberId,
+                    memberId,
+                    limit
+            );
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
 }
