@@ -35,14 +35,26 @@ public interface SettlementMapper {
             CreateSettlementRequest request
     );
 
-
     @Insert("""
-            INSERT INTO settlement_share(settlement_id, member_id, meetup_id, amount)
-            VALUES (#{settlementId}, #{participant.memberId}, #{meetupId}, #{participant.amount})
+            INSERT INTO settlement_share(settlement_id, member_id, meetup_id, amount, status, confirmed_at)
+            VALUES (#{settlementId},
+                    #{participant.memberId},
+                    #{meetupId},
+                    #{participant.amount},
+                    CASE
+                        WHEN #{participant.memberId} = #{paidByMemberId}
+                            THEN 'CONFIRMED'
+                            ELSE 'UNPAID'
+                    END,  -- 대표 결제자는 CONFIRMED 상태로 삽입
+                    CASE
+                        WHEN #{participant.memberId} = #{paidByMemberId}
+                            THEN SYSTIMESTAMP
+                    END)
             """)
     int insertSettlementShare(
             Long settlementId,
             Long meetupId,
+            Long paidByMemberId,
             CreateSettlementRequest.SettlementParticipant participant
     );
 
@@ -94,7 +106,7 @@ public interface SettlementMapper {
             FROM settlement s, member m
             WHERE s.paid_by_member_id = m.member_id
             AND s.settlement_id = #{settlementId}
-    """)
+            """)
     SettlementDetail findSettlementDetail(Long settlementId);
 
     @Select("""

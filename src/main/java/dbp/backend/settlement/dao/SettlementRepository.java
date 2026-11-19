@@ -76,7 +76,7 @@ public class SettlementRepository {
 
                 // 멤버별 정산 삽입
                 for (CreateSettlementRequest.SettlementParticipant participant : request.participants()) {
-                    if (mapper.insertSettlementShare(settlementId, request.meetupId(), participant) < 1) {
+                    if (mapper.insertSettlementShare(settlementId, request.meetupId(), memberId, participant) < 1) {
                         throw new DatabaseException();
                     }
                 }
