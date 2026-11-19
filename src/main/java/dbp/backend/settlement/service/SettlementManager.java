@@ -81,6 +81,7 @@ public class SettlementManager {
                 detail.title(),
                 detail.totalAmount(),
                 detail.spentAt(),
+                detail.createdAt(),
                 detail.account(),
                 detail.splitMethod(),
                 detail.paidByMemberId(),
