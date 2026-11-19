@@ -1341,6 +1341,7 @@ public class MeetupDao {
                     ORDER BY
                         m.created_at DESC,
                         m.meetup_id DESC
+                    FETCH FIRST 5 ROWS ONLY
                 """;
         try (Connection conn =
                      ConnectionManager.getConnection()) {
