@@ -1,6 +1,7 @@
 package dbp.backend.settlement.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record SettlementDetail(
         Long settlementId,
@@ -8,6 +9,7 @@ public record SettlementDetail(
         String title,
         int totalAmount,
         LocalDate spentAt,
+        LocalDateTime createdAt,
         String account,
         String splitMethod,
         Long paidByMemberId,

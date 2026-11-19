@@ -86,6 +86,7 @@ public interface SettlementMapper {
                    s.title,
                    s.total_amount,
                    s.spent_at,
+                   s.created_at,
                    s.account,
                    s.split_method,
                    s.paid_by_member_id,
@@ -101,7 +102,8 @@ public interface SettlementMapper {
                    m.nickname,
                    m.profile_image_url,
                    ss.amount,
-                   ss.status
+                   ss.status,
+                   ss.confirmed_at
             FROM settlement_share ss, member m 
             WHERE ss.member_id = m.member_id
               AND ss.settlement_id = #{settlementId}
