@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static dbp.backend.settlement.exception.SettlementErrorCode.TRANSFER_REQUEST_NOT_ALLOWED;
+
 @Service
 public class SettlementManager {
 
@@ -87,5 +89,25 @@ public class SettlementManager {
                 detail.paidByNickname(),
                 shares
         );
+    }
+
+    /**
+     * 송금 보고 (내 정산 항목을 UNPAID → REQUESTED)
+     *
+     * @param memberId     로그인한 회원 (송금한 사람)
+     * @param settlementId 송금 보고할 정산 id
+     */
+    public void requestTransfer(Long memberId, Long settlementId) {
+        // 1. 정산이 존재하는지 확인 (없으면 404)
+        SettlementDetail detail = settlementRepository.findSettlementDetail(settlementId);
+        if (detail == null) {
+            throw new ApiException(SettlementErrorCode.SETTLEMENT_NOT_FOUND);
+        }
+        // 2. 송금 보고 (UPDATE)
+        int updated = settlementRepository.requestTransfer(settlementId, memberId);
+        // 3. 바뀐 행이 없으면 → 내 정산 항목이 없거나, 이미 보고/확인된 상태
+        if (updated == 0) {
+            throw new ApiException(SettlementErrorCode.TRANSFER_REQUEST_NOT_ALLOWED);
+        }
     }
 }
