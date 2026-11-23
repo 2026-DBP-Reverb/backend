@@ -4,6 +4,7 @@ import dbp.backend.common.exception.code.ErrorCode;
 import jakarta.servlet.http.HttpServletResponse;
 
 public enum SettlementErrorCode implements ErrorCode {
+    INVALID_SETTLEMENT_ID(HttpServletResponse.SC_BAD_REQUEST, "정산 ID는 양수여야 합니다."),
     INVALID_MEETUP_ID(HttpServletResponse.SC_BAD_REQUEST, "모임 ID는 양수여야 합니다."),
     INVALID_TITLE(HttpServletResponse.SC_BAD_REQUEST, "정산 제목은 공백이 아닌 255자 이하의 문자열이어야 합니다."),
     INVALID_ACCOUNT(HttpServletResponse.SC_BAD_REQUEST, "계좌 정보는 공백이 아닌 127자 이하의 문자열이어야 합니다."),
@@ -17,7 +18,9 @@ public enum SettlementErrorCode implements ErrorCode {
     INVALID_TOTAL_AMOUNT(HttpServletResponse.SC_BAD_REQUEST, "총 정산 금액은 양수이며 멤버별 정산 금액 합계와 같아야 합니다."),
     NOT_MEETUP_PARTICIPANT(HttpServletResponse.SC_BAD_REQUEST, "정산 참여자 중 해당 모임 멤버가 아닌 사용자가 존재합니다."),
     SETTLEMENT_NOT_FOUND(HttpServletResponse.SC_NOT_FOUND, "정산 내역을 찾을 수 없습니다."),
-    TRANSFER_REQUEST_NOT_ALLOWED(HttpServletResponse.SC_CONFLICT, "송금 보고할 수 있는 정산 항목이 없습니다.");
+    TRANSFER_REQUEST_NOT_ALLOWED(HttpServletResponse.SC_CONFLICT, "송금 보고할 수 있는 정산 항목이 없습니다."),
+    SETTLEMENT_SHARE_NOT_FOUND(HttpServletResponse.SC_NOT_FOUND, "대상 회원의 정산 항목을 찾을 수 없습니다."),
+    TRANSFER_CONFIRM_NOT_ALLOWED(HttpServletResponse.SC_CONFLICT, "송금 확인 요청이 들어온 정산 항목만 확인할 수 있습니다.");
 
     private final int statusCode;
     private final String detail;

@@ -4,15 +4,16 @@ import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.settlement.dao.SettlementRepository;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.ConfirmTransferResponse;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
+import dbp.backend.settlement.model.PaidStatus;
 import dbp.backend.settlement.model.SettlementDetail;
+import dbp.backend.settlement.model.SettlementConfirmation;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
-import static dbp.backend.settlement.exception.SettlementErrorCode.TRANSFER_REQUEST_NOT_ALLOWED;
 
 @Service
 public class SettlementManager {
@@ -64,7 +65,7 @@ public class SettlementManager {
         SettlementDetail detail = settlementRepository.findSettlementDetail(settlementId);
 
         // 2. 없는 정산이면 404
-        if(detail == null) {
+        if (detail == null) {
             throw new ApiException(SettlementErrorCode.SETTLEMENT_NOT_FOUND);
         }
 
@@ -110,5 +111,34 @@ public class SettlementManager {
         if (updated == 0) {
             throw new ApiException(SettlementErrorCode.TRANSFER_REQUEST_NOT_ALLOWED);
         }
+    }
+
+    /**
+     * 정산 확인 요청이 들어온 정산 항목에 대해 정산 확정 처리
+     */
+    public ConfirmTransferResponse confirmTransfer(Long memberId, Long settlementId, Long requestedMemberId) {
+        if (settlementId == null || settlementId <= 0) {
+            throw new ApiException(SettlementErrorCode.INVALID_SETTLEMENT_ID);
+        }
+        if (requestedMemberId == null || requestedMemberId <= 0) {
+            throw new ApiException(SettlementErrorCode.INVALID_MEMBER_ID);
+        }
+
+        SettlementDetail detail = settlementRepository.findSettlementDetail(settlementId);
+        if (detail == null) {  // 특정 정산 항목이 존재하지 않는 경우
+            throw new ApiException(SettlementErrorCode.SETTLEMENT_NOT_FOUND);
+        }
+        if (!detail.paidByMemberId().equals(memberId)) {  // 대표 결제자가 아닌 사람이 정산 확정을 하려고 하는 경우
+            throw new ApiException(CommonErrorCode.FORBIDDEN);
+        }
+
+        SettlementConfirmation confirmation = settlementRepository.confirmTransfer(settlementId, requestedMemberId, memberId);
+        if (confirmation == null) {
+            throw new ApiException(SettlementErrorCode.SETTLEMENT_SHARE_NOT_FOUND);
+        }
+        if (confirmation.status() != PaidStatus.CONFIRMED) {  // 아직 REQUEST 상태가 아닌 정산 항목을 확정하려고 하는 경우
+            throw new ApiException(SettlementErrorCode.TRANSFER_CONFIRM_NOT_ALLOWED);
+        }
+        return new ConfirmTransferResponse(confirmation.confirmedAt());
     }
 }

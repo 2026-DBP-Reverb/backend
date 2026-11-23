@@ -1,6 +1,5 @@
 package dbp.backend.recommendation.dto.response;
 
-import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.recommendation.model.ReceivedRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -40,7 +39,7 @@ public record ReceivedRequestResponse(
     LocalDateTime requestedAt
 ) {
     public static ReceivedRequestResponse from(ReceivedRequest request){
-        return new ReceivedRequestResponse(request.requestId(), request.requesterId(), request.nickname(), ProfileImageUrls.resolve(request.profileImageUrl()),
+        return new ReceivedRequestResponse(request.requestId(), request.requesterId(), request.nickname(), request.profileImageUrl(),
                 request.requestedAt());
     }
 }

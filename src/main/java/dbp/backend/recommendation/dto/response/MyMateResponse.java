@@ -1,6 +1,5 @@
 package dbp.backend.recommendation.dto.response;
 
-import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.recommendation.model.MyMate;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -49,7 +48,7 @@ public record MyMateResponse(
                 myMate.requestId(),
                 myMate.memberId(),
                 myMate.nickname(),
-                ProfileImageUrls.resolve(myMate.profileImageUrl()), myMate.instagramId()
+                myMate.profileImageUrl(), myMate.instagramId()
         );
     }
 }

@@ -1,6 +1,5 @@
 package dbp.backend.member.dto;
 
-import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.member.model.Member;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -47,7 +46,7 @@ public record MemberResponse(
         return new MemberResponse(
                 member.getMemberId(),
                 member.getEmail(),
-                ProfileImageUrls.resolve(member.getProfileImageUrl()),
+                member.getProfileImageUrl(),
                 member.getInstagramId(),
                 member.getNickname(),
                 member.getCreatedAt()

@@ -6,10 +6,12 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.ConfirmTransferResponse;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.service.SettlementManager;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,7 +68,7 @@ public class SettlementController {
     public ResponseEntity<ResponseBody<SettlementDetailResponse>> getSettlementDetail(
             @PathVariable Long settlementId,
             HttpServletRequest httpServletRequest
-    ){
+    ) {
         // 로그인 확인
         Long memberId = SessionUtil.getLoginMemberId(httpServletRequest);
         if (memberId == null) {
@@ -94,7 +96,24 @@ public class SettlementController {
 
         // 송금 보고 (내 정산 항목을 UNPAID → REQUESTED)
         settlementManager.requestTransfer(memberId, settlementId);
-
         return ResponseEntity.ok(new ResponseBody<>(null));
+    }
+
+    @Operation(summary = "정산 확인")
+    @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
+    @PutMapping("/{settlementId}/{requestedMemberId}")
+    public ResponseEntity<ResponseBody<ConfirmTransferResponse>> confirmTransfer(
+            @Parameter(description = "확인할 정산 ID", example = "1")
+            @PathVariable Long settlementId,
+            @Parameter(description = "송금 확인 대상 회원 ID", example = "2")
+            @PathVariable Long requestedMemberId,
+            HttpServletRequest request
+    ) {
+        Long memberId = SessionUtil.getLoginMemberId(request);
+        if (memberId == null) {
+            throw new ApiException(CommonErrorCode.UNAUTHORIZED);
+        }
+        ConfirmTransferResponse response = settlementManager.confirmTransfer(memberId, settlementId, requestedMemberId);
+        return ResponseEntity.ok(new ResponseBody<>(response));
     }
 }

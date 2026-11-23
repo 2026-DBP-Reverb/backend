@@ -3,6 +3,7 @@ package dbp.backend.settlement.dao;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
+import dbp.backend.settlement.model.SettlementConfirmation;
 import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
@@ -126,11 +127,33 @@ public interface SettlementMapper {
     // 내 정산 항목을 송금 보고 상태로 변경 (UNPAID → REQUESTED)
     // 반환값: 바뀐 행 수 (0이면 대상 아님 또는 이미 보고함)
     @Update("""
-        UPDATE settlement_share
-        SET status = 'REQUESTED'
-        WHERE settlement_id = #{settlementId}
-        AND member_id = #{memberId}
-        AND status = 'UNPAID'
-        """)
+            UPDATE settlement_share
+            SET status = 'REQUESTED'
+            WHERE settlement_id = #{settlementId}
+            AND member_id = #{memberId}
+            AND status = 'UNPAID'
+            """)
     int requestTransfer(Long settlementId, Long memberId);
+
+    @Update("""
+            UPDATE settlement_share
+            SET status = 'CONFIRMED', confirmed_at = SYSTIMESTAMP
+            WHERE settlement_id = #{settlementId}
+              AND member_id = #{requestedMemberId}
+              AND status = 'REQUESTED'
+              AND EXISTS (
+                  SELECT 1 FROM settlement s
+                  WHERE s.settlement_id = #{settlementId}
+                    AND s.paid_by_member_id = #{paidByMemberId}
+              )
+            """)
+    int confirmTransfer(Long settlementId, Long requestedMemberId, Long paidByMemberId);
+
+    @Select("""
+            SELECT status, confirmed_at
+            FROM settlement_share
+            WHERE settlement_id = #{settlementId}
+              AND member_id = #{memberId}
+            """)
+    SettlementConfirmation findSettlementConfirmation(Long settlementId, Long memberId);
 }
