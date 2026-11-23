@@ -1,6 +1,5 @@
 package dbp.backend.home.dto.response;
 
-import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.recommendation.model.MateCandidate;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -45,9 +44,7 @@ public record HomeMemberCardResponse(
         return new HomeMemberCardResponse(
                 candidate.getMemberId(),
                 candidate.getNickname(),
-                ProfileImageUrls.resolve(
-                        candidate.getProfileImageUrl()
-                ),
+                candidate.getProfileImageUrl(),
                 hashtags,
                 candidate.getMatchRate()
         );

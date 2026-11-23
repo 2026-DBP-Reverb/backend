@@ -1,6 +1,5 @@
 package dbp.backend.recommendation.dto.response;
 
-import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.recommendation.model.MateCandidate;
 import dbp.backend.recommendation.model.RequestStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -58,7 +57,7 @@ public record MateRecommendationResponse(
         return new MateRecommendationResponse(
                 mateCandidate.getMemberId(),
                 mateCandidate.getNickname(),
-                ProfileImageUrls.resolve(mateCandidate.getProfileImageUrl()),
+                mateCandidate.getProfileImageUrl(),
                 mateCandidate.getMatchRate(),
                 commonArtists,
                 commonGenres,

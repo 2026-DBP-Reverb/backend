@@ -1,7 +1,5 @@
 package dbp.backend.settlement.dto.response;
 
-import dbp.backend.common.util.ProfileImageUrls;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,10 +25,6 @@ public record SettlementDetailResponse(
             String status,            // UNPAID / REQUESTED / CONFIRMED
             LocalDateTime confirmedAt
     ) {
-        // 생성될 때 프로필 이미지를 전체 URL로 변환 (없으면 기본 이미지)
-        public ShareItem {
-            profileImageUrl = ProfileImageUrls.resolve(profileImageUrl);
-        }
     }
 }
 

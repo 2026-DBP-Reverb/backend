@@ -1,6 +1,5 @@
 package dbp.backend.recommendation.service;
 
-import dbp.backend.common.util.ProfileImageUrls;
 import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.member.dao.MemberDao;
@@ -126,7 +125,7 @@ public class MateRecommendationManager {
         return new MateProfileResponse(
                 target.getMemberId(),
                 target.getNickname(),
-                ProfileImageUrls.resolve(target.getProfileImageUrl()),
+                target.getProfileImageUrl(),
                 instagramId,
                 artists,
                 genres,

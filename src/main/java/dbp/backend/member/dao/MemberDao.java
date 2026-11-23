@@ -55,7 +55,7 @@ public class MemberDao {
                     ?,
                     ?,
                     ?,
-                    '/images/default-profile.png'
+                    NULL
                 )
                 """;
 
