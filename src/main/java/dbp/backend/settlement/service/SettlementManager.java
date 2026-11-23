@@ -4,11 +4,13 @@ import dbp.backend.common.exception.ApiException;
 import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.settlement.dao.SettlementRepository;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.ConfirmTransferResponse;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
 import dbp.backend.settlement.model.PaidStatus;
 import dbp.backend.settlement.model.SettlementDetail;
+import dbp.backend.settlement.model.SettlementConfirmation;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -114,7 +116,7 @@ public class SettlementManager {
     /**
      * 정산 확인 요청이 들어온 정산 항목에 대해 정산 확정 처리
      */
-    public void confirmTransfer(Long memberId, Long settlementId, Long requestedMemberId) {
+    public ConfirmTransferResponse confirmTransfer(Long memberId, Long settlementId, Long requestedMemberId) {
         if (settlementId == null || settlementId <= 0) {
             throw new ApiException(SettlementErrorCode.INVALID_SETTLEMENT_ID);
         }
@@ -130,12 +132,13 @@ public class SettlementManager {
             throw new ApiException(CommonErrorCode.FORBIDDEN);
         }
 
-        PaidStatus status = settlementRepository.confirmTransfer(settlementId, requestedMemberId, memberId);
-        if (status == null) {
+        SettlementConfirmation confirmation = settlementRepository.confirmTransfer(settlementId, requestedMemberId, memberId);
+        if (confirmation == null) {
             throw new ApiException(SettlementErrorCode.SETTLEMENT_SHARE_NOT_FOUND);
         }
-        if (status != PaidStatus.CONFIRMED) {  // 아직 REQUEST 상태가 아닌 정산 항목을 확정하려고 하는 경우
+        if (confirmation.status() != PaidStatus.CONFIRMED) {  // 아직 REQUEST 상태가 아닌 정산 항목을 확정하려고 하는 경우
             throw new ApiException(SettlementErrorCode.TRANSFER_CONFIRM_NOT_ALLOWED);
         }
+        return new ConfirmTransferResponse(confirmation.confirmedAt());
     }
 }

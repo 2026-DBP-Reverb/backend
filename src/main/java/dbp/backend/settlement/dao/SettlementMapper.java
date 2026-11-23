@@ -3,7 +3,7 @@ package dbp.backend.settlement.dao;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
-import dbp.backend.settlement.model.PaidStatus;
+import dbp.backend.settlement.model.SettlementConfirmation;
 import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
@@ -150,10 +150,10 @@ public interface SettlementMapper {
     int confirmTransfer(Long settlementId, Long requestedMemberId, Long paidByMemberId);
 
     @Select("""
-            SELECT status
+            SELECT status, confirmed_at
             FROM settlement_share
             WHERE settlement_id = #{settlementId}
               AND member_id = #{memberId}
             """)
-    PaidStatus findSettlementShareStatus(Long settlementId, Long memberId);
+    SettlementConfirmation findSettlementConfirmation(Long settlementId, Long memberId);
 }

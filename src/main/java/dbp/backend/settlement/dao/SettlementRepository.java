@@ -9,7 +9,7 @@ import dbp.backend.settlement.dto.request.CreateSettlementRequest;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
-import dbp.backend.settlement.model.PaidStatus;
+import dbp.backend.settlement.model.SettlementConfirmation;
 import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
@@ -131,17 +131,16 @@ public class SettlementRepository {
         }
     }
 
-    public PaidStatus confirmTransfer(Long settlementId, Long requestedMemberId, Long paidByMemberId) {
+    public SettlementConfirmation confirmTransfer(Long settlementId, Long requestedMemberId, Long paidByMemberId) {
         try (SqlSession sqlSession = sqlSessionFactory.openSession(false)) {
             try {
                 SettlementMapper mapper = sqlSession.getMapper(SettlementMapper.class);
-                int updated = mapper.confirmTransfer(settlementId, requestedMemberId, paidByMemberId);
-                // 갱신되지 않았다면 기존 status 반환
-                PaidStatus status = (updated == 1)
-                        ? PaidStatus.CONFIRMED
-                        : mapper.findSettlementShareStatus(settlementId, requestedMemberId);
+                mapper.confirmTransfer(settlementId, requestedMemberId, paidByMemberId);
+                SettlementConfirmation confirmation = mapper.findSettlementConfirmation(
+                        settlementId, requestedMemberId
+                );
                 sqlSession.commit();
-                return status;
+                return confirmation;
             } catch (RuntimeException e) {
                 try {
                     sqlSession.rollback();

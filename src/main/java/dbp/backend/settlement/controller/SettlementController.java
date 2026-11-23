@@ -6,6 +6,7 @@ import dbp.backend.common.exception.code.CommonErrorCode;
 import dbp.backend.common.response.ResponseBody;
 import dbp.backend.common.util.SessionUtil;
 import dbp.backend.settlement.dto.request.CreateSettlementRequest;
+import dbp.backend.settlement.dto.response.ConfirmTransferResponse;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.service.SettlementManager;
@@ -101,7 +102,7 @@ public class SettlementController {
     @Operation(summary = "정산 확인")
     @SecurityRequirement(name = OpenApiConfig.SESSION_COOKIE_SECURITY_SCHEME)
     @PutMapping("/{settlementId}/{requestedMemberId}")
-    public ResponseEntity<ResponseBody<Void>> confirmTransfer(
+    public ResponseEntity<ResponseBody<ConfirmTransferResponse>> confirmTransfer(
             @Parameter(description = "확인할 정산 ID", example = "1")
             @PathVariable Long settlementId,
             @Parameter(description = "송금 확인 대상 회원 ID", example = "2")
@@ -112,7 +113,7 @@ public class SettlementController {
         if (memberId == null) {
             throw new ApiException(CommonErrorCode.UNAUTHORIZED);
         }
-        settlementManager.confirmTransfer(memberId, settlementId, requestedMemberId);
-        return ResponseEntity.ok(new ResponseBody<>(null));
+        ConfirmTransferResponse response = settlementManager.confirmTransfer(memberId, settlementId, requestedMemberId);
+        return ResponseEntity.ok(new ResponseBody<>(response));
     }
 }
