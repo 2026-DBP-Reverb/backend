@@ -52,7 +52,13 @@ public record MateProfileResponse(
                 description = "메이트 요청 상태 (NONE: 신청 가능, SENT: 수락 대기중, RECEIVED: 상대가 먼저 신청함)",
                 example = "NONE"
         )
-        RequestStatus requestStatus
+        RequestStatus requestStatus,
+
+        @Schema(
+                description = "현재 로그인한 회원과 매칭된 메이트인지 여부",
+                example = "true"
+        )
+        boolean isMyMate
 ) {
 
 }
