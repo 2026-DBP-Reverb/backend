@@ -9,6 +9,7 @@ import dbp.backend.settlement.dto.request.CreateSettlementRequest;
 import dbp.backend.settlement.dto.response.SettlementDetailResponse;
 import dbp.backend.settlement.dto.response.SettlementSummaryResponse;
 import dbp.backend.settlement.exception.SettlementErrorCode;
+import dbp.backend.settlement.model.PaidStatus;
 import dbp.backend.settlement.model.SettlementConfirmation;
 import dbp.backend.settlement.model.SettlementDetail;
 import org.apache.ibatis.exceptions.PersistenceException;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -77,7 +79,11 @@ public class SettlementRepository {
 
                 // 멤버별 정산 삽입
                 for (CreateSettlementRequest.SettlementParticipant participant : request.participants()) {
-                    if (mapper.insertSettlementShare(settlementId, request.meetupId(), memberId, participant) < 1) {
+                    PaidStatus status = participant.memberId().equals(memberId)
+                            ? PaidStatus.CONFIRMED
+                            : PaidStatus.UNPAID;
+                    LocalDateTime confirmedAt = status == PaidStatus.CONFIRMED ? LocalDateTime.now() : null;
+                    if (mapper.insertSettlementShare(settlementId, request.meetupId(), status.name(), confirmedAt, participant) < 1) {
                         throw new DatabaseException();
                     }
                 }

@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface SettlementMapper {
@@ -42,20 +43,14 @@ public interface SettlementMapper {
                     #{participant.memberId},
                     #{meetupId},
                     #{participant.amount},
-                    CASE
-                        WHEN #{participant.memberId} = #{paidByMemberId}
-                            THEN 'CONFIRMED'
-                            ELSE 'UNPAID'
-                    END,  -- 대표 결제자는 CONFIRMED 상태로 삽입
-                    CASE
-                        WHEN #{participant.memberId} = #{paidByMemberId}
-                            THEN SYSTIMESTAMP
-                    END)
+                    #{status},
+                    #{confirmedAt,jdbcType=TIMESTAMP})
             """)
     int insertSettlementShare(
             Long settlementId,
             Long meetupId,
-            Long paidByMemberId,
+            String status,
+            LocalDateTime confirmedAt,
             CreateSettlementRequest.SettlementParticipant participant
     );
 
@@ -75,15 +70,15 @@ public interface SettlementMapper {
                 spent_at,
                 m.nickname,
                 CASE
-                    WHEN EXISTS(  -- 정산에 멤버별 정산항목이 존재하고
+                    WHEN EXISTS(
                         SELECT 1
                         FROM settlement_share ss
                         WHERE ss.settlement_id = s.settlement_id
-                    ) AND NOT EXISTS(  -- 멤버별 정산항목이 confirmed가 아닌 게 하나도 존재하지 않는 경우
+                    ) AND NOT EXISTS(
                         SELECT 1
                         FROM settlement_share ss
                         WHERE ss.settlement_id = s.settlement_id AND ss.status <> 'CONFIRMED'
-                    ) THEN 1  -- 모든 멤버별 정산항목이 완료됨
+                    ) THEN 1
                     ELSE 0
                 END AS completed
             FROM settlement s, member m
@@ -117,7 +112,7 @@ public interface SettlementMapper {
                    ss.amount,
                    ss.status,
                    ss.confirmed_at
-            FROM settlement_share ss, member m 
+            FROM settlement_share ss, member m
             WHERE ss.member_id = m.member_id
               AND ss.settlement_id = #{settlementId}
             ORDER BY ss.member_id

@@ -18,6 +18,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(ApiException e) {
         ErrorCode errorCode = e.getErrorCode();
+        e.printStackTrace();
         return ResponseEntity
                 .status(errorCode.getStatusCode())
                 .body(new ApiError(errorCode));
@@ -26,6 +27,7 @@ public class GlobalExceptionHandler {
     // 서비스 내 SqlException을 받아 처리
     @ExceptionHandler(SQLException.class)
     public ResponseEntity<ApiError> handleSQLException(SQLException e) {
+        e.printStackTrace();
         return ResponseEntity
                 .status(CommonErrorCode.DATABASE_ERROR.getStatusCode())
                 .body(new ApiError(CommonErrorCode.DATABASE_ERROR));
@@ -36,6 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e
     ) {
+        System.out.println(e);
         return ResponseEntity
                 .status(CommonErrorCode.BAD_REQUEST.getStatusCode())
                 .body(new ApiError(CommonErrorCode.BAD_REQUEST));
@@ -44,6 +47,7 @@ public class GlobalExceptionHandler {
     // 기타 Exception들을 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleException(Exception e) {
+        System.out.println(e);
         return ResponseEntity
                 .status(CommonErrorCode.INTERNAL_SERVER_ERROR.getStatusCode())
                 .body(new ApiError(CommonErrorCode.INTERNAL_SERVER_ERROR));
